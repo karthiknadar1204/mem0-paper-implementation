@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { createConversationRoute } from './routes/conversations.js';
 import { createMessageRoute } from './routes/messages.js';
+import { startMemoryProcessor } from './workers/memory-processor.js';
 
 dotenv.config();
 
@@ -19,4 +20,5 @@ const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  startMemoryProcessor();
 });
