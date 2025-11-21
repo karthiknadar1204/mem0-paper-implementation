@@ -4,7 +4,7 @@ import { db } from '../config/db.js';
 import { messages, summaries } from '../config/schema.js';
 import { extractFacts } from '../services/extraction.js';
 import { processFact } from '../services/memory-updater.js';
-import { updateSummary } from '../services/summary.js';
+import { summaryUpdateQueue } from '../config/queue.js';
 import { eq, and, desc } from 'drizzle-orm';
 
 const connection = new IORedis(process.env.REDIS_URL, {
@@ -19,7 +19,6 @@ export const startMemoryProcessor = () => {
       const { conversationId, messageId } = job.data;
 
       try {
-        // Step 1: Fetch context
         const context = await fetchContext(conversationId, messageId);
         
         if (!context.newMessage) {
@@ -27,7 +26,6 @@ export const startMemoryProcessor = () => {
           return;
         }
 
-        // Step 2: Extract facts
         console.log(`Extracting facts from message: "${context.newMessage.content}"`);
         const facts = await extractFacts(
           context.summary,
@@ -43,12 +41,20 @@ export const startMemoryProcessor = () => {
           return;
         }
 
-        // Step 3: Process each fact (ADD/UPDATE/DELETE)
         const results = [];
+        let memoriesAdded = 0;
+        let memoriesUpdated = 0;
+        
         for (const fact of facts) {
           try {
             const result = await processFact(fact, conversationId);
             results.push(result);
+            
+            if (result.action === 'ADD') {
+              memoriesAdded++;
+            } else if (result.action === 'UPDATE') {
+              memoriesUpdated++;
+            }
             
             if (result.action === 'UPDATE') {
               console.log(`Processed fact: ${fact} -> ${result.action} ${result.memoryId}`);
@@ -61,37 +67,40 @@ export const startMemoryProcessor = () => {
             }
           } catch (error) {
             console.error(`Error processing fact "${fact}":`, error);
-            // Continue with other facts even if one fails
           }
         }
 
-        // Step 4: Update summary periodically (every 10-15 messages)
-        const messageCount = context.recentMessages.length;
-        if (messageCount % 10 === 0 || messageCount === 1) {
+        if (memoriesAdded >= 3 || memoriesUpdated >= 2) {
           try {
-            await updateSummary(conversationId);
-            console.log(`Summary updated for conversation ${conversationId}`);
+            await summaryUpdateQueue.add(
+              'update',
+              { conversationId },
+              {
+                delay: 5000,
+                jobId: `summary-${conversationId}-${Date.now()}`,
+              }
+            );
+            console.log(`Queued summary update for conversation ${conversationId} (${memoriesAdded} added, ${memoriesUpdated} updated)`);
           } catch (error) {
-            console.error(`Error updating summary:`, error);
-            // Don't fail the job if summary update fails
+            console.error(`Error queueing summary update:`, error);
           }
         }
 
         return { factsProcessed: facts.length, results };
       } catch (error) {
         console.error(`Error processing memory job for message ${messageId}:`, error);
-        throw error; // Re-throw to trigger retry
+        throw error;
       }
     },
     {
       connection,
-      concurrency: 5, // Process up to 5 jobs concurrently
+      concurrency: 5,
       removeOnComplete: {
-        age: 3600, // Keep completed jobs for 1 hour
-        count: 1000, // Keep last 1000 completed jobs
+        age: 3600,
+        count: 1000,
       },
       removeOnFail: {
-        age: 24 * 3600, // Keep failed jobs for 24 hours
+        age: 24 * 3600,
       },
     }
   );
@@ -109,7 +118,6 @@ export const startMemoryProcessor = () => {
 };
 
 const fetchContext = async (conversationId, messageId) => {
-  // Fetch new message
   const [newMessage] = await db
     .select()
     .from(messages)
@@ -120,7 +128,6 @@ const fetchContext = async (conversationId, messageId) => {
     return { newMessage: null, previousMessage: null, summary: '', recentMessages: [] };
   }
 
-  // Fetch all messages to find the previous one
   const allMessages = await db
     .select()
     .from(messages)
@@ -130,7 +137,6 @@ const fetchContext = async (conversationId, messageId) => {
   const currentIndex = allMessages.findIndex(msg => msg.id === messageId);
   const previousMessage = currentIndex > 0 ? allMessages[currentIndex - 1] : null;
 
-  // Fetch summary
   const [summaryRow] = await db
     .select()
     .from(summaries)
@@ -139,7 +145,6 @@ const fetchContext = async (conversationId, messageId) => {
 
   const summary = summaryRow?.text || '';
 
-  // Fetch last 10 messages
   const recentMessages = await db
     .select()
     .from(messages)
@@ -147,7 +152,6 @@ const fetchContext = async (conversationId, messageId) => {
     .orderBy(desc(messages.createdAt))
     .limit(10);
 
-  // Reverse to get chronological order
   recentMessages.reverse();
 
   return {

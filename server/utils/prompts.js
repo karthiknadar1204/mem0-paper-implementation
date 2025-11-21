@@ -56,13 +56,32 @@ Decide what action to take:
 Return your decision as a JSON object: { "action": "ADD" | "UPDATE" | "DELETE", "memoryId": "uuid" (only for UPDATE/DELETE) }`;
 };
 
-export const buildSummaryPrompt = (allMemories) => {
-  const memoriesText = allMemories
-    .map((mem, idx) => `${idx + 1}. ${mem.content}`)
+export const buildSummaryPrompt = (currentSummary, recentMessages) => {
+  const summaryText = currentSummary || '(empty or outdated)';
+  
+  const messagesText = recentMessages
+    .map((msg, idx) => `${msg.role}: ${msg.content}`)
     .join('\n');
 
-  return `Summarize all these facts into a concise summary (≤400 tokens):
-  ${memoriesText}
-  Create a coherent summary that captures all important information about the user.`;
+  return `You are maintaining a concise, factual summary of a long conversation.
+
+Current summary (may be outdated or empty):
+${summaryText}
+
+Recent messages (last ${recentMessages.length}):
+${messagesText}
+
+Task:
+Rewrite the summary to include all important facts from the new messages.
+
+Requirements:
+- Keep it under 400 tokens
+- Only include factual, permanent information (names, preferences, life events, plans, relationships, etc.)
+- Do NOT include temporary context like "user asked about weather" or conversational filler
+- Do NOT repeat facts already in the current summary unless they changed
+- Create a coherent, flowing summary (not a bullet list)
+- Focus on what the user has revealed about themselves
+
+Return ONLY the new summary text.`;
 };
 

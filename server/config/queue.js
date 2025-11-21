@@ -15,3 +15,8 @@ export const memoryProcessQueue = new Queue('memory-process', {
   connection,
   defaultJobOptions: { removeOnComplete: true, removeOnFail: 10 },
 });
+
+export const summaryUpdateQueue = new Queue('summary-update', {
+  connection,
+  defaultJobOptions: { removeOnComplete: true, removeOnFail: 10 },
+});

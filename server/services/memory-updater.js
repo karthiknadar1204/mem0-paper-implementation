@@ -9,15 +9,12 @@ const SIMILARITY_THRESHOLD = 0.5;
 
 export const processFact = async (fact, conversationId) => {
   try {
-    // Step 1: Generate embedding for the candidate fact
     const embeddingResponse = await openai.embeddings.create({
       model: 'text-embedding-3-small',
       input: fact,
     });
     const embedding = embeddingResponse.data[0].embedding;
 
-    // Step 2: Search Pinecone for similar memories in this conversation
-    // First, get all memory IDs for this conversation from DB
     const conversationMemories = await db
       .select({ id: memories.id })
       .from(memories)
@@ -26,7 +23,6 @@ export const processFact = async (fact, conversationId) => {
     const similarMemories = [];
     
     if (conversationMemories.length > 0) {
-      // Query Pinecone with filter
       try {
         const queryResponse = await index.query({
           vector: embedding,
@@ -40,7 +36,6 @@ export const processFact = async (fact, conversationId) => {
         if (queryResponse.matches && queryResponse.matches.length > 0) {
           for (const match of queryResponse.matches) {
             if (match.score >= SIMILARITY_THRESHOLD) {
-              // Verify it belongs to this conversation and fetch from DB
               const [memory] = await db
                 .select()
                 .from(memories)
@@ -58,7 +53,6 @@ export const processFact = async (fact, conversationId) => {
           }
         }
       } catch (filterError) {
-        // If filter doesn't work, query without filter and filter in code
         console.warn('Pinecone filter not supported, filtering in code:', filterError);
         const queryResponse = await index.query({
           vector: embedding,
@@ -90,10 +84,8 @@ export const processFact = async (fact, conversationId) => {
       }
     }
 
-    // Step 3: Tool-calling LLM to decide action
     const decision = await decideAction(fact, similarMemories);
 
-    // Step 4: Execute the action
     return await executeAction(decision, fact, conversationId, embedding);
   } catch (error) {
     console.error('Error processing fact:', error);
@@ -159,7 +151,6 @@ const decideAction = async (fact, similarMemories) => {
     };
   } catch (error) {
     console.error('Error deciding action:', error);
-    // Default to ADD if decision fails
     return { action: 'ADD', memoryId: null };
   }
 };
@@ -169,7 +160,6 @@ const executeAction = async (decision, fact, conversationId, embedding) => {
 
   switch (action) {
     case 'ADD': {
-      // Insert into database
       const [newMemory] = await db
         .insert(memories)
         .values({
@@ -178,7 +168,6 @@ const executeAction = async (decision, fact, conversationId, embedding) => {
         })
         .returning();
 
-      // Upsert to Pinecone
       await index.upsert([
         {
           id: newMemory.id,
@@ -198,7 +187,6 @@ const executeAction = async (decision, fact, conversationId, embedding) => {
         throw new Error('UPDATE action requires memoryId');
       }
 
-      // Fetch old memory to show what's being updated
       const [oldMemory] = await db
         .select()
         .from(memories)
@@ -207,7 +195,6 @@ const executeAction = async (decision, fact, conversationId, embedding) => {
 
       const oldContent = oldMemory?.content || 'unknown';
 
-      // Update database
       await db
         .update(memories)
         .set({
@@ -216,7 +203,6 @@ const executeAction = async (decision, fact, conversationId, embedding) => {
         })
         .where(eq(memories.id, memoryId));
 
-      // Upsert to Pinecone (same ID, overwrites old embedding)
       await index.upsert([
         {
           id: memoryId,
@@ -236,10 +222,8 @@ const executeAction = async (decision, fact, conversationId, embedding) => {
         throw new Error('DELETE action requires memoryId');
       }
 
-      // Delete from database
       await db.delete(memories).where(eq(memories.id, memoryId));
 
-      // Delete from Pinecone
       await index.deleteMany([memoryId]);
 
       return { action: 'DELETE', memoryId };
