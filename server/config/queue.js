@@ -1,5 +1,4 @@
 import { Queue } from 'bullmq';
-
 import IORedis from 'ioredis';
 
 const connection = new IORedis(process.env.REDIS_URL, {
@@ -8,6 +7,11 @@ const connection = new IORedis(process.env.REDIS_URL, {
 });
 
 export const memoryLogQueue = new Queue('memory-log', {
+  connection,
+  defaultJobOptions: { removeOnComplete: true, removeOnFail: 10 },
+});
+
+export const memoryProcessQueue = new Queue('memory-process', {
   connection,
   defaultJobOptions: { removeOnComplete: true, removeOnFail: 10 },
 });
