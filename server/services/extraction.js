@@ -5,6 +5,7 @@ export const extractFacts = async (summary, recentMessages, previousMessage, new
   try {
     const prompt = buildExtractionPrompt(summary, recentMessages, previousMessage, newMessage);
 
+    console.log('Extracting facts with prompt:', prompt);
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [

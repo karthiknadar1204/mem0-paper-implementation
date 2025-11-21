@@ -110,7 +110,7 @@ const decideAction = async (fact, similarMemories) => {
       messages: [
         {
           role: 'system',
-          content: 'You are a memory management system. Decide whether to ADD, UPDATE, or DELETE a memory based on the candidate fact and existing similar memories. Always return your decision as a JSON object.',
+          content: 'You are a memory management system. Decide whether to ADD, UPDATE, or DELETE a memory based on the candidate fact and existing similar memories.',
         },
         {
           role: 'user',
@@ -118,11 +118,40 @@ const decideAction = async (fact, similarMemories) => {
         },
       ],
       temperature: 0.2,
-      response_format: { type: 'json_object' },
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'decide_memory_action',
+            description: 'Decide what action to take on a memory: ADD (new fact), UPDATE (refines existing), or DELETE (contradicts existing)',
+            parameters: {
+              type: 'object',
+              properties: {
+                action: {
+                  type: 'string',
+                  enum: ['ADD', 'UPDATE', 'DELETE'],
+                  description: 'The action to take: ADD for new facts, UPDATE to refine existing memory, DELETE to remove contradicted memory',
+                },
+                memoryId: {
+                  type: 'string',
+                  description: 'The ID of the existing memory (required for UPDATE and DELETE, null for ADD)',
+                },
+              },
+              required: ['action'],
+            },
+          },
+        },
+      ],
+      tool_choice: { type: 'function', function: { name: 'decide_memory_action' } },
     });
 
-    const content = response.choices[0].message.content;
-    const parsed = JSON.parse(content);
+    const toolCall = response.choices[0].message.tool_calls?.[0];
+    if (!toolCall || toolCall.function.name !== 'decide_memory_action') {
+      console.warn('No tool call returned, defaulting to ADD');
+      return { action: 'ADD', memoryId: null };
+    }
+
+    const parsed = JSON.parse(toolCall.function.arguments);
 
     return {
       action: parsed.action || 'ADD',
