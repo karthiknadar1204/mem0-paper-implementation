@@ -129,7 +129,7 @@ Respond with: "I don't recall any information about that."`;
     return `• ${memContent}${timeInfo}`;
   }).join('\n');
 
-  return `You are an intelligent assistant with perfect long-term memory. Today's date is ${currentDate.toLocaleDateString()}.
+  return `You are an intelligent assistant with perfect long-term memory. Today's date is ${currentDateStr}.
 
 Relevant memories from past conversation (with temporal context):
 
