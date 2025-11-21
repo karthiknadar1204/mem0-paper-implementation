@@ -52,7 +52,6 @@ export const retrieveRelevantMemories = async (question, conversationId) => {
                 }
             }
         }
-        console.log('memoryIds', memoryIds);
 
         if (memoryIds.length === 0) {
             return [];
@@ -67,16 +66,18 @@ export const retrieveRelevantMemories = async (question, conversationId) => {
         const memoryMap = new Map();
         retrievedMemories.forEach(mem => {
             if (memoryIdsSet.has(mem.id)) {
-                memoryMap.set(mem.id, mem.content);
+                memoryMap.set(mem.id, {
+                    content: mem.content,
+                    createdAt: mem.createdAt,
+                    updatedAt: mem.updatedAt,
+                });
             }
         });
-        console.log('memoryMap', memoryMap);
-        console.log('retrievedMemories', retrievedMemories);
 
         const relevantMemories = memoryIds
             .map(id => memoryMap.get(id))
-            .filter(content => content !== undefined);
-        console.log('relevantMemories', relevantMemories);
+            .filter(mem => mem !== undefined);
+
         return relevantMemories;
     } catch (error) {
         console.error('Error retrieving memories:', error);

@@ -94,24 +94,89 @@ You have no relevant memories about this topic.
 Respond with: "I don't recall any information about that."`;
   }
 
-  const memoriesText = memories
-    .map((mem, idx) => `• ${mem}`)
-    .join('\n');
+  const currentDate = new Date();
+  const currentDateStr = currentDate.toISOString().split('T')[0];
 
-  return `You are an intelligent assistant with perfect long-term memory.
+  const memoriesWithTime = memories.map((mem, idx) => {
+    const memContent = typeof mem === 'string' ? mem : mem.content;
+    const createdAt = typeof mem === 'string' ? null : mem.createdAt;
+    const updatedAt = typeof mem === 'string' ? null : mem.updatedAt;
+    
+    let timeInfo = '';
+    if (createdAt) {
+      const createdDate = new Date(createdAt);
+      const daysAgo = Math.floor((currentDate - createdDate) / (1000 * 60 * 60 * 24));
+      
+      if (daysAgo === 0) {
+        timeInfo = ' (today)';
+      } else if (daysAgo === 1) {
+        timeInfo = ' (yesterday)';
+      } else if (daysAgo < 7) {
+        timeInfo = ` (${daysAgo} days ago)`;
+      } else if (daysAgo < 30) {
+        const weeksAgo = Math.floor(daysAgo / 7);
+        timeInfo = ` (${weeksAgo} week${weeksAgo > 1 ? 's' : ''} ago)`;
+      } else {
+        const monthsAgo = Math.floor(daysAgo / 30);
+        timeInfo = ` (${monthsAgo} month${monthsAgo > 1 ? 's' : ''} ago)`;
+      }
+      
+      if (updatedAt && updatedAt.getTime() !== createdAt.getTime()) {
+        timeInfo += ' [updated]';
+      }
+    }
+    
+    return `• ${memContent}${timeInfo}`;
+  }).join('\n');
 
-Relevant memories from past conversation:
+  return `You are an intelligent assistant with perfect long-term memory. Today's date is ${currentDate.toLocaleDateString()}.
+
+Relevant memories from past conversation (with temporal context):
 
 ----------------------------------------
-${memoriesText}
+${memoriesWithTime}
 ----------------------------------------
 
 Question: ${question}
 
-Instructions:
-- Answer concisely and accurately using ONLY the memories above
-- If the memories don't contain enough information to answer, say "I don't recall" instead of guessing
-- Be specific and reference the exact information from the memories
-- If there are multiple relevant memories, synthesize them into a coherent answer`;
+CRITICAL INSTRUCTIONS FOR CONTEXT-AWARE ANSWERING:
+
+1. **Understand Implied Questions:**
+   - If asked "Who is my girlfriend?" or "Do I have a girlfriend?", understand this is asking about CURRENT relationship status
+   - Look for memories about breakups, being single, or relationship changes
+   - If memories show a breakup happened, answer accordingly (e.g., "You broke up with [name] and are now single")
+   - Don't just look for the exact keyword - understand the context
+
+2. **Temporal Understanding:**
+   - Questions with "yesterday", "last week", "recently" refer to recent memories
+   - Questions with "when did I" or "when was" are asking for timing information
+   - Use the timestamps to understand the chronological order of events
+   - If a memory was updated, it represents the most current information
+
+3. **Status Changes:**
+   - If memories show a change (e.g., "was vegan" → "stopped being vegan"), answer with the CURRENT status
+   - If memories show contradictions, the most recent/updated memory is the truth
+   - Understand that deleted/updated memories mean the old fact is no longer true
+
+4. **Relationship Context:**
+   - Questions about relationships should consider the full context:
+     * Past relationships (if mentioned)
+     * Current relationship status
+     * Breakups or changes in status
+   - Synthesize multiple related memories to give a complete answer
+
+5. **Answer Guidelines:**
+   - Answer concisely and accurately using ONLY the memories above
+   - If the memories don't contain enough information, say "I don't recall" instead of guessing
+   - Be specific and reference the exact information from the memories
+   - If there are multiple relevant memories, synthesize them into a coherent, chronological answer
+   - For relationship questions, always clarify current status if there were changes
+
+6. **Examples of Context-Aware Understanding:**
+   - "Who is my girlfriend?" → If memories show breakup: "You broke up with [name] and are now single"
+   - "Am I vegan?" → If memories show you stopped: "You stopped being vegan and are now non-vegetarian"
+   - "What did I say yesterday?" → Look for memories marked "(yesterday)" or "(1 day ago)"
+
+Answer the question using the memories above, understanding the full context and temporal relationships:`;
 };
 

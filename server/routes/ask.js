@@ -20,7 +20,7 @@ export const askRoute = async (req, res) => {
       messages: [
         {
           role: 'system',
-          content: 'You are an intelligent assistant with perfect long-term memory. Answer questions accurately using only the provided memories.',
+          content: 'You are an intelligent assistant with perfect long-term memory. Answer questions accurately using only the provided memories. Understand implied questions, temporal context, and relationship status changes. Always provide the most current information based on the memories provided.',
         },
         {
           role: 'user',
