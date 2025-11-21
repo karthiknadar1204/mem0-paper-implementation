@@ -2,6 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { createConversationRoute } from './routes/conversations.js';
 import { createMessageRoute } from './routes/messages.js';
+import { askRoute } from './routes/ask.js';
 import { startMemoryProcessor } from './workers/memory-processor.js';
 import { startSummaryProcessor } from './workers/summary-processor.js';
 import { summaryUpdateQueue } from './config/queue.js';
@@ -19,6 +20,7 @@ app.get('/health', async (req, res) => {
 
 app.post('/conversations', createConversationRoute);
 app.post('/conversations/:id/messages', createMessageRoute);
+app.post('/conversations/:id/ask', askRoute);
 
 const PORT = process.env.PORT || 4000;
 

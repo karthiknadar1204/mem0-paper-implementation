@@ -85,3 +85,33 @@ Requirements:
 Return ONLY the new summary text.`;
 };
 
+export const buildAnswerPrompt = (memories, question) => {
+  if (!memories || memories.length === 0) {
+    return `Question: ${question}
+
+You have no relevant memories about this topic.
+
+Respond with: "I don't recall any information about that."`;
+  }
+
+  const memoriesText = memories
+    .map((mem, idx) => `• ${mem}`)
+    .join('\n');
+
+  return `You are an intelligent assistant with perfect long-term memory.
+
+Relevant memories from past conversation:
+
+----------------------------------------
+${memoriesText}
+----------------------------------------
+
+Question: ${question}
+
+Instructions:
+- Answer concisely and accurately using ONLY the memories above
+- If the memories don't contain enough information to answer, say "I don't recall" instead of guessing
+- Be specific and reference the exact information from the memories
+- If there are multiple relevant memories, synthesize them into a coherent answer`;
+};
+
