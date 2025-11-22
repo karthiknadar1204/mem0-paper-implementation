@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, varchar,boolean, integer } from 'drizzle-orm/pg-core';
 
 export const conversations = pgTable('conversations', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -47,4 +47,17 @@ export const summaries = pgTable('summaries', {
     .references(() => conversations.id, { onDelete: 'cascade' }),
   text: text('text').notNull().default(''),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const apiKeys = pgTable('api_keys', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  keyHash: varchar('key_hash', { length: 255 }).notNull(),
+  keyPrefix: varchar('key_prefix', { length: 12 }).notNull(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar('name', { length: 100 }).notNull().default('My API Key'),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  lastUsedAt: timestamp('last_used_at'),
 });
