@@ -64,5 +64,37 @@ export const api = {
       return false;
     }
   },
+
+  async getConversations() {
+    const response = await fetch(`${API_URL}/conversations`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch conversations');
+    }
+
+    return response.json();
+  },
+
+  async createConversation(name) {
+    const response = await fetch(`${API_URL}/conversations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ name }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create conversation');
+    }
+
+    return response.json();
+  },
 };
 

@@ -2,7 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
-import { createConversationRoute } from './routes/conversations.js';
+import { createConversationRoute, getConversationsRoute } from './routes/conversations.js';
 import { createMessageRoute } from './routes/messages.js';
 import { askRoute } from './routes/ask.js';
 import { registerRoute, loginRoute, logoutRoute } from './routes/auth.js';
@@ -49,6 +49,7 @@ app.get('/health', async (req, res) => {
 app.post('/register', registerRoute);
 app.post('/login', loginRoute);
 app.post('/logout', logoutRoute);
+app.get('/conversations', authenticate, getConversationsRoute);
 app.post('/conversations', authenticate, createConversationRoute);
 app.post('/conversations/:id/messages', authenticate, createMessageRoute);
 app.post('/conversations/:id/ask', askRoute);

@@ -5,6 +5,7 @@ export const conversations = pgTable('conversations', {
   userId: uuid('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }), 
+  name: varchar('name', { length: 255 }),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
