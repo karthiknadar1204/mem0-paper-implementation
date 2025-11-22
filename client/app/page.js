@@ -1,8 +1,11 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Brain, Zap, Lock, Activity, Database, Star, Cpu, Terminal, Globe, Shield, Layers } from "lucide-react"
 import Link from "next/link"
+import AuthModal from "../components/AuthModal"
+import { api } from "../lib/api"
 
 const fadeInUp = {
   initial: { opacity: 0, y: 20 },
@@ -19,6 +22,26 @@ const staggerContainer = {
 }
 
 export default function LandingPage() {
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authMode, setAuthMode] = useState("signup")
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('isLoggedIn') === 'true'
+    setIsLoggedIn(storedAuth)
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      await api.logout()
+      setIsLoggedIn(false)
+      localStorage.setItem('isLoggedIn', 'false')
+      window.location.reload()
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#050505] text-white selection:bg-[#333] selection:text-white overflow-x-hidden font-mono">
       {/* Navigation */}
@@ -49,12 +72,43 @@ export default function LandingPage() {
               <Star className="w-4 h-4" />
               <span>2.4k</span>
             </Link>
-            <Link
-              href="#"
-              className="px-4 py-2 bg-white hover:bg-gray-200 text-black text-sm font-bold rounded-sm transition-colors"
-            >
-              Install Package
-            </Link>
+            {isLoggedIn ? (
+              <>
+                <Link
+                  href="/projects"
+                  className="px-4 py-2 bg-white hover:bg-gray-200 text-black text-sm font-bold rounded-sm transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 bg-[#111] hover:bg-[#222] text-white text-sm font-bold rounded-sm transition-colors border border-white/10"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => {
+                    setAuthMode("login")
+                    setShowAuthModal(true)
+                  }}
+                  className="px-4 py-2 bg-[#111] hover:bg-[#222] text-white text-sm font-bold rounded-sm transition-colors border border-white/10"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => {
+                    setAuthMode("signup")
+                    setShowAuthModal(true)
+                  }}
+                  className="px-4 py-2 bg-white hover:bg-gray-200 text-black text-sm font-bold rounded-sm transition-colors"
+                >
+                  Signup
+                </button>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -390,6 +444,16 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        mode={authMode}
+        onLoginSuccess={() => {
+          setIsLoggedIn(true)
+          localStorage.setItem('isLoggedIn', 'true')
+        }}
+      />
     </div>
   )
 }

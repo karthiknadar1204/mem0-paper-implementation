@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import { createConversationRoute } from './routes/conversations.js';
 import { createMessageRoute } from './routes/messages.js';
 import { askRoute } from './routes/ask.js';
@@ -16,6 +17,27 @@ import bodyParser from 'body-parser';
 dotenv.config();
 
 const app = express();
+
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy: Origin ' + origin + ' not allowed'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Set-Cookie'],
+  optionsSuccessStatus: 200
+}));
+
 app.use(express.json({ strict: false }));
 app.use(cookieParser());
 app.use(bodyParser.json());
