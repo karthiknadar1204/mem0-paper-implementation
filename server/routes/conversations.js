@@ -4,9 +4,13 @@ import { summaryUpdateQueue } from '../config/queue.js';
 
 export const createConversationRoute = async (req, res) => {
   try {
+    const userId = req.user.id;
+
     const [conversation] = await db
       .insert(conversations)
-      .values({})
+      .values({
+        userId,
+      })
       .returning();
 
     try {

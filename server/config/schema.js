@@ -1,8 +1,19 @@
 import { pgTable, uuid, text, timestamp, varchar } from 'drizzle-orm/pg-core';
 
-//Groups everything together. One row = one long-term chat with the AI. Without it we cannot separate memories of different chats.
 export const conversations = pgTable('conversations', {
   id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }), 
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// 2. users table (as before)
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 255 }).notNull(),
+  email: varchar('email', { length: 255 }).unique().notNull(),
+  passwordHash: text('password_hash').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

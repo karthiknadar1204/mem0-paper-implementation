@@ -1,11 +1,23 @@
 import openai from '../utils/openai.js';
 import { db } from '../config/db.js';
-import { summaries, messages } from '../config/schema.js';
+import { summaries, messages, conversations } from '../config/schema.js';
 import { buildSummaryPrompt } from '../utils/prompts.js';
 import { eq, desc } from 'drizzle-orm';
 
 export const generateSummary = async (conversationId) => {
   try {
+
+    const [conversation] = await db
+      .select()
+      .from(conversations)
+      .where(eq(conversations.id, conversationId))
+      .limit(1);
+
+    if (!conversation) {
+      console.log(`Conversation ${conversationId} does not exist, skipping summary generation`);
+      return '';
+    }
+
     const [summaryRow] = await db
       .select()
       .from(summaries)
@@ -36,10 +48,14 @@ export const generateSummary = async (conversationId) => {
           .set({ text: '', updatedAt: new Date() })
           .where(eq(summaries.conversationId, conversationId));
       } else {
-        await db.insert(summaries).values({
-          conversationId,
-          text: '',
-        });
+        try {
+          await db.insert(summaries).values({
+            conversationId,
+            text: '',
+          });
+        } catch (insertError) {
+          console.warn(`Could not insert summary for conversation ${conversationId}:`, insertError.message);
+        }
       }
       return '';
     }
@@ -76,10 +92,14 @@ export const generateSummary = async (conversationId) => {
         .set({ text: summaryText, updatedAt: new Date() })
         .where(eq(summaries.conversationId, conversationId));
     } else {
-      await db.insert(summaries).values({
-        conversationId,
-        text: summaryText,
-      });
+      try {
+        await db.insert(summaries).values({
+          conversationId,
+          text: summaryText,
+        });
+      } catch (insertError) {
+        console.warn(`Could not insert summary for conversation ${conversationId}:`, insertError.message);
+      }
     }
 
     return summaryText;
