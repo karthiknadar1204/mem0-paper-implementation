@@ -6,6 +6,7 @@ import { createConversationRoute, getConversationsRoute } from './routes/convers
 import { createMessageRoute } from './routes/messages.js';
 import { askRoute } from './routes/ask.js';
 import { registerRoute, loginRoute, logoutRoute } from './routes/auth.js';
+import { createApiKeyRoute } from './routes/api-keys.js';
 import { authenticate } from './middleware/auth.js';
 import { startMemoryProcessor } from './workers/memory-processor.js';
 import { startSummaryProcessor } from './workers/summary-processor.js';
@@ -53,6 +54,7 @@ app.get('/conversations', authenticate, getConversationsRoute);
 app.post('/conversations', authenticate, createConversationRoute);
 app.post('/conversations/:id/messages', authenticate, createMessageRoute);
 app.post('/conversations/:id/ask', askRoute);
+app.post('/api-keys', authenticate, createApiKeyRoute);
 
 const PORT = process.env.PORT || 4000;
 
