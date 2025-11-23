@@ -1,0 +1,23 @@
+{
+  "name": "normal-memory",
+  "version": "0.1.0",
+  "description": "One memory. Any model. Forever.",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "memory",
+    "ai",
+    "llm",
+    "conversation",
+    "context"
+  ],
+  "author": "",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
