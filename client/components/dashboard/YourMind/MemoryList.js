@@ -5,7 +5,7 @@ import { api } from "@/lib/api"
 
 export default function MemoryList({ conversationId, initialMemories, onMemoryAdded, loading: initialLoading }) {
   const [memories, setMemories] = useState(initialMemories || [])
-  const [loading, setLoading] = useState(initialLoading)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [offset, setOffset] = useState(50)
   const [hasMore, setHasMore] = useState(true)
 
@@ -14,9 +14,9 @@ export default function MemoryList({ conversationId, initialMemories, onMemoryAd
   }, [initialMemories])
 
   const loadMore = async () => {
-    if (loading || !hasMore) return
+    if (loadingMore || !hasMore) return
 
-    setLoading(true)
+    setLoadingMore(true)
     try {
       const newMemories = await api.getMemories(conversationId, 50, offset)
       if (newMemories.length === 0) {
@@ -28,11 +28,11 @@ export default function MemoryList({ conversationId, initialMemories, onMemoryAd
     } catch (error) {
       console.error('Error loading more memories:', error)
     } finally {
-      setLoading(false)
+      setLoadingMore(false)
     }
   }
 
-  if (loading && memories.length === 0) {
+  if (initialLoading && memories.length === 0) {
     return <div className="text-gray-400">Loading memories...</div>
   }
 
@@ -63,10 +63,10 @@ export default function MemoryList({ conversationId, initialMemories, onMemoryAd
       {hasMore && (
         <button
           onClick={loadMore}
-          disabled={loading}
+          disabled={loadingMore}
           className="w-full px-6 py-3 bg-white/10 hover:bg-white/20 rounded-lg transition-colors disabled:opacity-50"
         >
-          {loading ? "Loading..." : "Load More"}
+          {loadingMore ? "Loading..." : "Load More"}
         </button>
       )}
     </div>
