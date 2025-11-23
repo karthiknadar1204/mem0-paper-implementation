@@ -99,6 +99,13 @@ const PORT = process.env.PORT || 4000;
 
 const setupPeriodicSummaryJobs = async () => {
   try {
+    const repeatableJobs = await summaryUpdateQueue.getRepeatableJobs();
+    for (const job of repeatableJobs) {
+      if (job.id && job.id.startsWith('summary-periodic-')) {
+        await summaryUpdateQueue.removeRepeatableByKey(job.key);
+      }
+    }
+    console.log(`Removed ${repeatableJobs.length} old periodic summary jobs`);
 
     const allConversations = await db.select().from(conversations);
     
