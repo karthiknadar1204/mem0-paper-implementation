@@ -1,9 +1,16 @@
 {
   "name": "normal-memory",
-  "version": "0.1.0",
-  "description": "One memory. Any model. Forever.",
+  "version": "0.1.1",
+  "description": "SDK for Normal Memory - A memory layer for AI applications with persistent conversation memory and smart routing.",
   "main": "src/index.js",
   "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,12 +19,24 @@
     "ai",
     "llm",
     "conversation",
-    "context"
+    "context",
+    "vector",
+    "embeddings",
+    "chatbot",
+    "assistant"
   ],
   "author": "",
   "license": "ISC",
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/normal-memory.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/normal-memory/issues"
+  },
+  "homepage": "https://github.com/yourusername/normal-memory#readme"
 }
 

@@ -64,7 +64,7 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex">
+    <div className="min-h-screen bg-[#050505] text-white flex font-mono">
       {/* Sidebar */}
       <div className="w-64 bg-[#0a0a0a] border-r border-white/10 p-6">
         <h2 className="text-xl font-bold mb-6">Settings</h2>

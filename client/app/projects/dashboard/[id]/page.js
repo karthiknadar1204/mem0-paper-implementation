@@ -65,7 +65,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white">
+    <div className="min-h-screen bg-[#050505] text-white font-mono">
       {/* Header */}
       <div className="border-b border-white/10 bg-[#0a0a0a]">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">

@@ -54,24 +54,11 @@ export default function LandingPage() {
             normalmemory
           </div>
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-            <Link href="#" className="hover:text-white transition-colors">
+            <Link href="/documentation" className="hover:text-white transition-colors">
               Documentation
-            </Link>
-            <Link href="#" className="hover:text-white transition-colors">
-              API
-            </Link>
-            <Link href="#" className="hover:text-white transition-colors">
-              GitHub
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <Link
-              href="#"
-              className="hidden md:flex items-center gap-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
-            >
-              <Star className="w-4 h-4" />
-              <span>2.4k</span>
-            </Link>
             {isLoggedIn ? (
               <>
                 <Link
@@ -153,7 +140,7 @@ export default function LandingPage() {
                   npm install normalmemory
                 </Link>
                 <Link
-                  href="#"
+                  href="/documentation"
                   className="w-full sm:w-auto px-8 py-4 bg-[#111] hover:bg-[#222] text-white border border-white/10 rounded-sm transition-colors flex items-center justify-center gap-2"
                 >
                   Read Documentation
@@ -413,12 +400,6 @@ export default function LandingPage() {
               className="w-full sm:w-auto px-8 py-4 bg-white text-black font-bold rounded-sm hover:bg-gray-200 transition-colors"
             >
               Get Started
-            </Link>
-            <Link
-              href="#"
-              className="w-full sm:w-auto px-8 py-4 bg-transparent text-white border border-white/20 hover:bg-white/5 rounded-sm transition-colors"
-            >
-              View on GitHub
             </Link>
           </div>
         </div>
