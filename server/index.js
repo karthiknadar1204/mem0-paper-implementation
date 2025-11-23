@@ -66,7 +66,12 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 
 app.get('/health', async (req, res) => {
-  res.json({ status: 'ok' });
+  res.json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    service: 'normal-memory-api',
+    uptime: process.uptime(),
+  });
 });
 
 app.post('/register', registerRoute);
