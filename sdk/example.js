@@ -9,11 +9,11 @@ async function example() {
     // In real usage, you'd get conversationId from your backend/database
     
     // For this example, we'll use a known conversationId
-    const conversationId = '4e4c8ef0-9bfa-4d06-b012-b7b9316dc144';
+    const conversationId = 'e6b3a17f-8510-4dc1-825d-9d934f239e27';
     
     // Step 2: Initialize SDK with required conversationId
     const memory = new NormalMemory({
-      apiKey: 'sk_1f6381a97bef8602fa2e3ecbcdb79c9c4076e17e82090b36b5196426be023c7e', // Your API key
+      apiKey: 'sk_8d93146f1647f21e8f519a72858add000ad7566739e3b5358d15f4ecab49bc25', // Your API key
       conversationId: conversationId, // REQUIRED: Conversation ID
       baseUrl: 'http://localhost:4000', // Optional: Your backend URL
       model: 'gpt-4o-mini', // Optional: model name
@@ -38,6 +38,15 @@ async function example() {
 
     const askAnswer = await memory.ask("Where do I live?");
     console.log('Ask:', askAnswer);
+
+    // Adding more data
+    console.log('\n=== Adding more data ===');
+    
+    const chatReply2 = await memory.chat("my girlfriend name is kitkat");
+    console.log('Chat:', chatReply2);
+
+    const chatReply3 = await memory.chat("i stopped being a vegan, i am now a non vegetarian");
+    console.log('Chat:', chatReply3);
 
     // Conversation management
     console.log('\n=== Conversation Management ===');

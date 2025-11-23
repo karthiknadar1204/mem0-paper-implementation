@@ -120,6 +120,20 @@ export default function ProjectsPage() {
                     <h3 className="text-xl font-bold mb-2">
                       {conversation.name || `Project ${conversation.id.slice(0, 8)}`}
                     </h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <p className="text-sm text-gray-400">
+                        ID: <code className="text-white font-mono text-xs">{conversation.id}</code>
+                      </p>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(conversation.id)
+                        }}
+                        className="text-xs px-2 py-1 bg-white/10 hover:bg-white/20 rounded transition-colors"
+                        title="Copy ID"
+                      >
+                        Copy
+                      </button>
+                    </div>
                     <p className="text-sm text-gray-400">
                       Created: {new Date(conversation.createdAt).toLocaleDateString()}
                     </p>
