@@ -561,3 +561,127 @@ You have:
 5. Explicit conversation management (no auto-creation)
 
 The system is model-agnostic (memory is separate from LLM), self-hostable, and ready for production use.
+
+
+
+
+
+Reviewing the SDK implementation to list all methods and their functionality:
+
+
+[4 tools called]
+
+
+## SDK methods overview
+
+### Core methods
+
+#### 1. `.say(message)` — smart routing method
+- Purpose: Main method that routes to `/chat` or `/ask` based on message content
+- How it works:
+  - If `smartRouting` is enabled (default), uses `SmartRouter` to analyze the message
+  - If it looks like a question (e.g., "What do you know about...", "Tell me about...", ends with "?"), routes to `.ask()`
+  - Otherwise, routes to `.chat()`
+  - If `smartRouting` is disabled, always routes to `.chat()`
+- Backend: Calls either `/conversations/:id/chat` or `/conversations/:id/ask`
+- Returns: String reply from the LLM
+
+#### 2. `.chat(message)` — conversational chat
+- Purpose: Normal conversation with immediate LLM response
+- How it works:
+  - Sends message to `/conversations/:id/chat`
+  - Backend immediately calls LLM with recent messages + summary for context
+  - Returns instant reply (typically <800ms)
+  - Background: Triggers memory extraction job (fire-and-forget)
+- Use case: Regular conversation, sharing new information, casual chat
+- Returns: String reply from the LLM
+
+#### 3. `.ask(question)` — memory recall
+- Purpose: Ask questions using long-term memory
+- How it works:
+  - Sends question to `/conversations/:id/ask`
+  - Backend retrieves relevant memories from Pinecone
+  - LLM answers using retrieved memories + summary
+  - Returns answer based on stored facts
+- Use case: "What do you know about my diet?", "Where do I live?", "Tell me about my girlfriend"
+- Returns: String answer based on memory
+
+### Conversation management methods
+
+#### 4. `.setConversation(conversationId)` — switch conversation
+- Purpose: Switch to a different conversation
+- How it works: Updates the internal `conversationId` for subsequent calls
+- Use case: Switch between different conversation contexts
+- Returns: Nothing (void)
+
+#### 5. `.getConversationId()` — get current conversation
+- Purpose: Get the currently active conversation ID
+- Returns: String conversation ID
+
+#### 6. `.createConversation(name?)` — create new conversation
+- Purpose: Create a new conversation/project
+- Parameters: Optional `name` for the conversation
+- How it works:
+  - Calls `POST /conversations` with optional name
+  - Automatically sets the new conversation as active
+- Returns: String (new conversation ID)
+
+#### 7. `.listConversations()` — list all conversations
+- Purpose: Get all conversations for the authenticated user
+- How it works: Calls `GET /conversations`
+- Returns: Array of conversation objects with `id`, `name`, `createdAt`
+
+### Constructor configuration
+
+```javascript
+new NormalMemory({
+  apiKey: 'sk_...',           // REQUIRED: Your API key
+  conversationId: 'uuid',    // REQUIRED: Conversation ID
+  baseUrl: 'http://...',      // Optional: Backend URL (default: localhost:4000)
+  model: 'gpt-4o-mini',       // Optional: Model name (not currently used)
+  smartRouting: true          // Optional: Enable smart routing (default: true)
+})
+```
+
+### Method flow diagram
+
+```
+User calls .say("message")
+    ↓
+SmartRouter.decide(message)
+    ↓
+    ├─ Looks like question? → .ask() → /ask endpoint → Memory retrieval + LLM
+    └─ Normal message? → .chat() → /chat endpoint → Immediate LLM + background memory
+```
+
+### Examples
+
+```javascript
+// Smart routing - automatically chooses the right method
+await memory.say("Hi, I'm Alex");           // → .chat() - normal conversation
+await memory.say("What do you know about me?"); // → .ask() - memory recall
+
+// Explicit methods
+await memory.chat("I'm feeling great!");   // Force normal conversation
+await memory.ask("Where do I live?");      // Force memory recall
+
+// Conversation management
+const conversations = await memory.listConversations();
+await memory.createConversation("My Project");
+memory.setConversation("new-conversation-id");
+const currentId = memory.getConversationId();
+```
+
+### Summary
+
+| Method | Purpose | Backend Endpoint | Returns |
+|--------|---------|------------------|---------|
+| `.say()` | Smart routing (auto-detects chat vs ask) | `/chat` or `/ask` | String reply |
+| `.chat()` | Normal conversation | `/chat` | String reply |
+| `.ask()` | Memory recall | `/ask` | String answer |
+| `.setConversation()` | Switch conversation | None | void |
+| `.getConversationId()` | Get current conversation | None | String ID |
+| `.createConversation()` | Create new conversation | `POST /conversations` | String ID |
+| `.listConversations()` | List all conversations | `GET /conversations` | Array |
+
+The SDK provides a simple interface: use `.say()` for most cases, or use `.chat()`/`.ask()` when you need explicit control.
