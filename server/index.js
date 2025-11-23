@@ -44,13 +44,15 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl) - but don't use wildcard
     if (!origin) {
-      // Allow requests with no origin (like mobile apps or curl)
       return callback(null, true);
     }
     if (allowedOrigins.includes(origin)) {
+      // Return the specific origin, not true, to avoid wildcard issues with credentials
       return callback(null, origin);
     } else {
+      console.error('CORS blocked origin:', origin);
       return callback(new Error('CORS policy: Origin ' + origin + ' not allowed'));
     }
   },
