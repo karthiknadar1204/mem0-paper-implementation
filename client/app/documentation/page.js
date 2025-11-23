@@ -51,9 +51,9 @@ export default function DocumentationPage() {
 
 // Initialize SDK
 const memory = new NormalMemory({
-  apiKey: 'sk_...',              // Required: Your API key
-  conversationId: '...',         // Required: Conversation ID
-  baseUrl: 'https://...',        // Optional: Backend URL
+  apiKey: 'sk_...',                                                              // Required: Your API key
+  conversationId: '...',                                                         // Required: Conversation ID
+  baseUrl: 'https://mem0-paper-implementation-production.up.railway.app',        // Optional: Backend URL
 });
 
 // Use it!

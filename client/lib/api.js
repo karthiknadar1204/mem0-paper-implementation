@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mem0-paper-implementation-production.up.railway.app';
 
 export const api = {
   async register(name, email, password) {

@@ -37,7 +37,9 @@ const app = express();
 
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://127.0.0.1:3000'
+  'http://127.0.0.1:3000',
+  'https://mem0-paper-implementation-production.up.railway.app',
+  'https://selfless-fulfillment-production.up.railway.app'
 ];
 
 app.use(cors({

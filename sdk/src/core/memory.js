@@ -7,7 +7,7 @@ export class NormalMemory {
     const {
       apiKey,
       conversationId,
-      baseUrl = 'http://localhost:4000',
+      baseUrl = 'https://mem0-paper-implementation-production.up.railway.app',
       model = 'gpt-4o-mini',
       smartRouting = true,
     } = config;

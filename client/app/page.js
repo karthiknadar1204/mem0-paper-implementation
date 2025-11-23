@@ -369,26 +369,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Tech Stack - Simplified */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto max-w-6xl text-center">
-          <p className="text-gray-600 text-sm font-mono mb-10">COMPATIBLE WITH</p>
-          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-40 grayscale hover:grayscale-0 transition-all duration-500">
-            <div className="text-xl font-bold text-white flex items-center gap-2">
-              <Cpu className="w-5 h-5" /> OpenAI
-            </div>
-            <div className="text-xl font-bold text-white flex items-center gap-2">
-              <BoxIcon /> Anthropic
-            </div>
-            <div className="text-xl font-bold text-white flex items-center gap-2">
-              <Globe className="w-5 h-5" /> Vercel AI SDK
-            </div>
-            <div className="text-xl font-bold text-white flex items-center gap-2">
-              <Database className="w-5 h-5" /> Pinecone
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Final CTA */}
       <section className="py-32 px-6 relative overflow-hidden border-t border-white/10">
