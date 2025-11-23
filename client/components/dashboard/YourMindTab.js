@@ -5,8 +5,6 @@ import { api } from "@/lib/api"
 import AskAnythingBox from "./YourMind/AskAnythingBox"
 import MemoryList from "./YourMind/MemoryList"
 import OnThisDay from "./YourMind/OnThisDay"
-import SearchBar from "./YourMind/SearchBar"
-import MemoryOfTheDay from "./YourMind/MemoryOfTheDay"
 import TimelineView from "./YourMind/TimelineView"
 
 export default function YourMindTab({ conversationId }) {
@@ -42,14 +40,8 @@ export default function YourMindTab({ conversationId }) {
       {/* Ask Anything Box */}
       <AskAnythingBox conversationId={conversationId} />
 
-      {/* Memory of the Day */}
-      <MemoryOfTheDay conversationId={conversationId} />
-
       {/* On This Day */}
       <OnThisDay conversationId={conversationId} />
-
-      {/* Search Bar */}
-      <SearchBar conversationId={conversationId} />
 
       {/* Timeline View */}
       <TimelineView conversationId={conversationId} />
