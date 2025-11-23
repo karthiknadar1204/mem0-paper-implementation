@@ -1,0 +1,1 @@
+ALTER TABLE "retrieval_logs" ALTER COLUMN "top_memory_ids" SET DATA TYPE json;

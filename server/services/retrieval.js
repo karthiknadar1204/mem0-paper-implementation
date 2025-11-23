@@ -67,6 +67,7 @@ export const retrieveRelevantMemories = async (question, conversationId) => {
         retrievedMemories.forEach(mem => {
             if (memoryIdsSet.has(mem.id)) {
                 memoryMap.set(mem.id, {
+                    id: mem.id,
                     content: mem.content,
                     createdAt: mem.createdAt,
                     updatedAt: mem.updatedAt,

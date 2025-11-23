@@ -1,0 +1,563 @@
+Reviewing the SDK files to explain the structure and configuration:
+
+
+[6 tools called]
+
+
+## SDK architecture overview
+
+### Origin file: `src/index.js`
+
+Entry point that exports the main class:
+
+```javascript
+import { NormalMemory } from './core/memory.js';
+export { NormalMemory };
+export default NormalMemory;
+```
+
+When users do `import { NormalMemory } from 'normal-memory'`, they get the `NormalMemory` class from `core/memory.js`.
+
+---
+
+## Configuration flow
+
+### 1. User configuration (constructor)
+
+In `src/core/memory.js`, the `NormalMemory` constructor accepts:
+
+```javascript
+constructor(config = {}) {
+  const {
+    apiKey,              // REQUIRED: User's API key
+    baseUrl = 'http://localhost:4000',  // Optional: Backend URL
+    model = 'gpt-4o-mini',              // Optional: Model name (not used yet)
+    conversationId = null,              // Optional: Existing conversation ID
+    smartRouting = true,                // Optional: Enable smart routing
+  } = config;
+```
+
+Configuration is stored as instance properties:
+- `this.apiKey` - Used for authentication
+- `this.baseUrl` - Backend server URL
+- `this.model` - Model name (stored but not actively used)
+- `this.smartRouting` - Whether to use smart routing
+
+### 2. Component initialization
+
+After config validation, three components are created:
+
+```javascript
+// 1. HTTP Client - handles all API requests
+this.client = new HttpClient(baseUrl, apiKey);
+
+// 2. Conversation Manager - manages conversation state
+this.conversationManager = new ConversationManager(this.client);
+
+// 3. Smart Router - decides /chat vs /ask (if enabled)
+this.router = smartRouting ? new SmartRouter() : null;
+```
+
+---
+
+## Component breakdown
+
+### 1. HttpClient (`src/http/client.js`)
+
+Purpose: Makes authenticated HTTP requests to the backend.
+
+Configuration:
+- `baseUrl` - Backend URL (trailing slash removed)
+- `apiKey` - Stored for authentication
+
+How it works:
+```javascript
+constructor(baseUrl, apiKey) {
+  this.baseUrl = baseUrl.replace(/\/$/, '');  // Clean URL
+  this.apiKey = apiKey;                       // Store for auth
+}
+```
+
+Key method: `request()`
+- Builds full URL: `${this.baseUrl}${endpoint}`
+- Adds `Authorization: Bearer {apiKey}` header
+- Handles JSON serialization/deserialization
+- Throws errors on failed requests
+
+Example:
+```javascript
+// User calls: memory.chat("Hello")
+// Internally: client.post('/conversations/123/chat', { message: "Hello" })
+// Sends: POST http://localhost:4000/conversations/123/chat
+// Headers: { Authorization: "Bearer sk_...", Content-Type: "application/json" }
+```
+
+### 2. ConversationManager (`src/core/conversation.js`)
+
+Purpose: Manages conversation state and auto-creation.
+
+Configuration:
+- Receives `HttpClient` instance (needs it to create conversations)
+
+State:
+- `this.conversationId` - Current conversation ID (null initially)
+
+Key methods:
+- `ensureConversation()` - Auto-creates if missing
+- `createConversation(name)` - Creates new conversation via API
+- `setConversationId(id)` - Switches to existing conversation
+- `getConversationId()` - Returns current conversation ID
+
+Flow:
+```javascript
+// First time user calls memory.say("Hello")
+await this.conversationManager.ensureConversation();
+// → conversationId is null
+// → Calls createConversation()
+// → POST /conversations → Gets { id: "uuid-123" }
+// → Sets this.conversationId = "uuid-123"
+// → Now all future calls use this conversationId
+```
+
+### 3. SmartRouter (`src/core/router.js`)
+
+Purpose: Decides whether to use `/chat` or `/ask` endpoint.
+
+Configuration:
+- No configuration needed (stateless)
+
+How it works:
+```javascript
+decide(message) {
+  return this.heuristicRoute(message);
+  // Returns: 'chat' or 'ask'
+}
+```
+
+Heuristic logic:
+1. Checks question patterns (what, who, where, etc.)
+2. Checks memory keywords (remember, recall, etc.)
+3. Checks for question mark at end
+4. Default: returns 'chat'
+
+Example:
+```javascript
+decide("What do you remember about me?") → 'ask'
+decide("Hi, I'm Alex") → 'chat'
+decide("Tell me about my diet") → 'ask'
+```
+
+---
+
+## Method flow
+
+### `.say(message)` - Smart routing method
+
+```javascript
+async say(message) {
+  // 1. Validate input
+  if (!message || ...) throw new Error(...);
+  
+  // 2. Ensure conversation exists (auto-create if needed)
+  await this.conversationManager.ensureConversation();
+  
+  // 3. Smart routing decision
+  if (this.smartRouting && this.router) {
+    const route = await this.router.decide(message);
+    // route = 'ask' or 'chat'
+    return route === 'ask' ? this.ask(message) : this.chat(message);
+  }
+  
+  // 4. Fallback to chat if smart routing disabled
+  return this.chat(message);
+}
+```
+
+### `.chat(message)` - Direct conversation
+
+```javascript
+async chat(message) {
+  // 1. Validate
+  // 2. Ensure conversation
+  await this.conversationManager.ensureConversation();
+  const conversationId = this.conversationManager.getConversationId();
+  
+  // 3. Call backend
+  const response = await this.client.post(
+    `/conversations/${conversationId}/chat`,
+    { message: message.trim() }
+  );
+  
+  // 4. Return reply
+  return response.reply;
+}
+```
+
+### `.ask(question)` - Memory recall
+
+```javascript
+async ask(question) {
+  // Same flow as chat, but calls /ask endpoint
+  const response = await this.client.post(
+    `/conversations/${conversationId}/ask`,
+    { question: question.trim() }
+  );
+  
+  return response.answer;
+}
+```
+
+---
+
+## Complete flow example
+
+User code:
+```javascript
+const memory = new NormalMemory({
+  apiKey: 'sk_abc123',
+  baseUrl: 'http://localhost:4000'
+});
+
+await memory.say("Hi, I'm Alex");
+```
+
+Step-by-step execution:
+
+1. Constructor:
+   - Validates `apiKey` is provided
+   - Sets defaults: `baseUrl = 'http://localhost:4000'`, `smartRouting = true`
+   - Creates `HttpClient('http://localhost:4000', 'sk_abc123')`
+   - Creates `ConversationManager(client)`
+   - Creates `SmartRouter()`
+
+2. `memory.say("Hi, I'm Alex")`:
+   - Validates message
+   - Calls `conversationManager.ensureConversation()`
+     - `conversationId` is null → calls `createConversation()`
+     - `client.post('/conversations', {})`
+     - Backend returns `{ id: 'conv-123' }`
+     - Sets `conversationId = 'conv-123'`
+   - Calls `router.decide("Hi, I'm Alex")`
+     - Heuristic checks → not a question → returns `'chat'`
+   - Calls `this.chat("Hi, I'm Alex")`
+     - `client.post('/conversations/conv-123/chat', { message: "Hi, I'm Alex" })`
+     - Backend processes and returns `{ reply: "Hey Alex! Nice to meet you." }`
+   - Returns `"Hey Alex! Nice to meet you."`
+
+---
+
+## Configuration summary
+
+| Component | Configured Where | What It Does |
+|-----------|------------------|--------------|
+| **NormalMemory** | Constructor (`memory.js`) | Main class, orchestrates everything |
+| **HttpClient** | Constructor (`memory.js`) | Handles HTTP requests with auth |
+| **ConversationManager** | Constructor (`memory.js`) | Manages conversation state |
+| **SmartRouter** | Constructor (`memory.js`) | Routes messages intelligently |
+| **API Key** | User provides in config | Used in HttpClient for auth |
+| **Base URL** | User provides in config | Used in HttpClient for requests |
+| **Model** | User provides in config | Stored but not actively used yet |
+| **Smart Routing** | User provides in config | Enables/disables router |
+
+---
+
+## Key design decisions
+
+1. Separation of concerns: Each component has a single responsibility
+2. Dependency injection: `ConversationManager` receives `HttpClient` (not created internally)
+3. Auto-creation: Conversations are created automatically on first use
+4. Stateless router: No cache, pure function
+5. Zero dependencies: Uses native `fetch` API
+6. Error handling: All errors bubble up with clear messages
+
+The SDK is a thin wrapper that orchestrates these components to provide a simple API for users.
+
+
+
+
+
+## What we built
+
+A complete memory layer system with:
+1. Backend API (Express server)
+2. SDK (JavaScript client library)
+
+---
+
+## Backend implementation
+
+### Core architecture
+
+Three main endpoints:
+
+1. `POST /conversations/:id/chat`
+   - Purpose: Conversational endpoint with immediate response
+   - Flow:
+     - Receives user message
+     - Saves message to database
+     - Fetches conversation summary + recent messages (last 20)
+     - Calls LLM (gpt-4o-mini) with context for immediate reply
+     - Saves assistant response
+     - Queues memory extraction job (fire-and-forget, background)
+     - Returns reply immediately (<600ms)
+   - Response: `{ reply: "Hey Alex! Nice to meet you." }`
+
+2. `POST /conversations/:id/ask`
+   - Purpose: Pure memory recall using long-term memory
+   - Flow:
+     - Receives question
+     - Retrieves relevant memories from Pinecone (vector search)
+     - Builds prompt with memories + question
+     - Calls LLM to generate answer based on memories
+     - Returns answer
+   - Response: `{ answer: "You live in Berlin and you're vegan.", memoriesUsed: 3 }`
+
+3. `POST /conversations/:id/messages` (internal/legacy)
+   - Purpose: Just saves message and triggers memory extraction
+   - Returns: `{ status: "accepted", messageId: "..." }`
+   - Note: SDK doesn't use this; it's for internal use
+
+### Supporting endpoints
+
+- `GET /conversations` - List all conversations for logged-in user
+- `POST /conversations` - Create new conversation (with optional name)
+- `POST /api-keys` - Create API key
+- `GET /api-keys` - List all API keys for user
+- `POST /register`, `/login`, `/logout` - Authentication
+
+### Background workers
+
+1. Memory processor
+   - Processes messages from queue
+   - Extracts facts using LLM
+   - Updates Pinecone (vector DB)
+   - Updates/creates/deletes memories based on LLM decisions
+
+2. Summary processor
+   - Maintains conversation summary (≤400 tokens)
+   - Used in extraction prompts to avoid re-extracting old facts
+   - Updates every 3 minutes per conversation
+
+### Authentication
+
+- Dual authentication:
+  - Cookie-based JWT (for web app)
+  - Bearer token API keys (for SDK)
+  - Middleware checks both, prioritizes API key if present
+
+---
+
+## SDK implementation
+
+### Main class: `NormalMemory`
+
+Location: `sdk/src/core/memory.js`
+
+### Constructor (required parameters)
+
+```javascript
+new NormalMemory({
+  apiKey: 'sk_...',              // REQUIRED
+  conversationId: 'uuid-...',     // REQUIRED
+  baseUrl: 'http://...',         // Optional (default: localhost:4000)
+  model: 'gpt-4o-mini',          // Optional (stored but not used yet)
+  smartRouting: true,             // Optional (default: true)
+})
+```
+
+Validation:
+- Throws error if `apiKey` missing
+- Throws error if `conversationId` missing or not a string
+
+### Public methods
+
+1. `memory.say(message)` - Smart routing method
+   - Purpose: Automatically routes to `/chat` or `/ask`
+   - How it works:
+     - Validates message
+     - Uses SmartRouter to decide route
+     - Calls either `chat()` or `ask()` based on decision
+   - Returns: Reply string
+   - Example:
+     ```javascript
+     await memory.say("Hi, I'm Alex")           // → routes to /chat
+     await memory.say("What do you know?")       // → routes to /ask
+     ```
+
+2. `memory.chat(message)` - Explicit conversation
+   - Purpose: Direct conversation endpoint
+   - Calls: `POST /conversations/:id/chat`
+   - Returns: Immediate LLM reply
+   - Example:
+     ```javascript
+     const reply = await memory.chat("I'm feeling great!");
+     // → "That's fantastic! It's always nice to feel good."
+     ```
+
+3. `memory.ask(question)` - Explicit memory recall
+   - Purpose: Ask questions using long-term memory
+   - Calls: `POST /conversations/:id/ask`
+   - Returns: Answer based on stored memories
+   - Example:
+     ```javascript
+     const answer = await memory.ask("Where do I live?");
+     // → "You live in Berlin."
+     ```
+
+4. `memory.setConversation(conversationId)` - Switch conversation
+   - Purpose: Change to a different conversation
+   - Updates: Both instance property and internal conversationManager
+   - Note: You need to get conversationId from backend first
+
+5. `memory.getConversationId()` - Get current conversation
+   - Purpose: Returns the current conversation ID
+   - Returns: String (conversation ID) or null
+
+6. `memory.createConversation(name)` - Create new conversation
+   - Purpose: Create a new conversation
+   - Calls: `POST /conversations` with optional name
+   - Returns: New conversation ID
+   - Note: Also sets it as current conversation
+
+7. `memory.listConversations()` - List all conversations
+   - Purpose: Get all conversations for the user
+   - Calls: `GET /conversations`
+   - Returns: Array of conversation objects
+   - Example:
+     ```javascript
+     const conversations = await memory.listConversations();
+     // → [{ id: "...", name: "My Project", createdAt: "..." }, ...]
+     ```
+
+---
+
+## Internal components
+
+### 1. HttpClient (`sdk/src/http/client.js`)
+- Purpose: Handles all HTTP requests
+- Features:
+  - Adds `Authorization: Bearer {apiKey}` header automatically
+  - Handles JSON serialization/deserialization
+  - Error handling with clear messages
+  - Uses native `fetch` API (zero dependencies)
+
+### 2. ConversationManager (`sdk/src/core/conversation.js`)
+- Purpose: Manages conversation state
+- Features:
+  - Stores current conversationId
+  - `requireConversationId()` - throws clear error if missing
+  - `createConversation()` - creates new conversation
+  - `listConversations()` - fetches all conversations
+
+### 3. SmartRouter (`sdk/src/core/router.js`)
+- Purpose: Decides `/chat` vs `/ask` routing
+- How it works:
+  - Heuristic-based (no LLM calls, fast)
+  - Checks question patterns (what, who, where, etc.)
+  - Checks memory keywords (remember, recall, etc.)
+  - Checks for question mark
+  - Returns: `'chat'` or `'ask'`
+- No caching (stateless)
+
+---
+
+## Design decisions
+
+### 1. ConversationId is required
+- No auto-creation
+- User must explicitly pass conversationId
+- Prevents accidental conversation creation
+- Forces users to manage conversations intentionally
+
+### 2. Smart routing
+- `.say()` automatically routes
+- Heuristic-based (fast, zero cost)
+- Can be disabled with `smartRouting: false`
+
+### 3. Dual authentication
+- Cookie-based for web app
+- API key for SDK
+- Same middleware handles both
+
+### 4. Background processing
+- `/chat` returns immediately
+- Memory extraction happens in background (1-4 seconds)
+- User gets instant response, memory updates later
+
+### 5. Zero dependencies (SDK)
+- Uses native `fetch`
+- No external libraries
+- Small bundle size
+
+---
+
+## Complete flow example
+
+User code:
+```javascript
+const memory = new NormalMemory({
+  apiKey: 'sk_abc123',
+  conversationId: '4e4c8ef0-9bfa-4d06-b012-b7b9316dc144'
+});
+
+await memory.say("Hi, I'm Alex and I'm vegan");
+```
+
+What happens:
+1. SDK validates `conversationId` exists
+2. SmartRouter analyzes message → decides `'chat'`
+3. SDK calls `POST /conversations/4e4c8ef0.../chat`
+4. Backend:
+   - Saves user message
+   - Gets summary + recent messages
+   - Calls LLM → gets reply
+   - Saves assistant reply
+   - Queues memory job (background)
+   - Returns reply
+5. SDK returns reply to user
+6. (Background) Memory extraction happens, updates Pinecone
+
+---
+
+## What we support
+
+### Backend
+- ✅ Conversational chat with immediate responses
+- ✅ Memory recall using long-term storage
+- ✅ Automatic memory extraction (background)
+- ✅ Conversation management (create, list)
+- ✅ API key management
+- ✅ Dual authentication (cookie + API key)
+- ✅ User authentication (register, login, logout)
+
+### SDK
+- ✅ Smart routing (automatic `/chat` vs `/ask`)
+- ✅ Explicit methods (`.chat()`, `.ask()`)
+- ✅ Conversation management (list, create, switch)
+- ✅ API key authentication
+- ✅ Error handling with clear messages
+- ✅ Zero dependencies
+- ✅ TypeScript-ready (JavaScript with clear structure)
+
+---
+
+## What we don't support (yet)
+
+- Streaming responses (planned)
+- Model switching at runtime (model is stored but not used)
+- Conversation deletion (only create/list)
+- API key deletion/deactivation (only create/list)
+- Multiple conversations in parallel (one at a time per instance)
+
+---
+
+## Summary
+
+You have:
+1. A production-ready backend with two main endpoints (`/chat` and `/ask`)
+2. A clean SDK that abstracts complexity into simple methods
+3. Smart routing that automatically chooses the right endpoint
+4. Background memory processing that doesn't block responses
+5. Explicit conversation management (no auto-creation)
+
+The system is model-agnostic (memory is separate from LLM), self-hostable, and ready for production use.

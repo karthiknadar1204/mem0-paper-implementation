@@ -20,3 +20,8 @@ export const summaryUpdateQueue = new Queue('summary-update', {
   connection,
   defaultJobOptions: { removeOnComplete: true, removeOnFail: 10 },
 });
+
+export const loggingQueue = new Queue('logging', {
+  connection,
+  defaultJobOptions: { removeOnComplete: true, removeOnFail: 10 },
+});

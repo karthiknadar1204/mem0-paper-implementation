@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, varchar,boolean, integer } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, varchar, boolean, integer, json } from 'drizzle-orm/pg-core';
 
 export const conversations = pgTable('conversations', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -60,4 +60,29 @@ export const apiKeys = pgTable('api_keys', {
   isActive: boolean('is_active').notNull().default(true),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   lastUsedAt: timestamp('last_used_at'),
+});
+
+export const apiRequests = pgTable('api_requests', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  endpoint: varchar('endpoint', { length: 50 }).notNull(),
+  statusCode: integer('status_code').notNull(),
+  durationMs: integer('duration_ms').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const retrievalLogs = pgTable('retrieval_logs', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  conversationId: uuid('conversation_id')
+    .notNull()
+    .references(() => conversations.id, { onDelete: 'cascade' }),
+  question: text('question').notNull(),
+  topMemoryIds: json('top_memory_ids'),
+  latencyMs: integer('latency_ms').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });

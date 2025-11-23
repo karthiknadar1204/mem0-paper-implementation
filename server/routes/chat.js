@@ -1,15 +1,19 @@
 import { db } from '../config/db.js';
 import { messages, summaries } from '../config/schema.js';
-import { memoryProcessQueue } from '../config/queue.js';
+import { memoryProcessQueue, loggingQueue } from '../config/queue.js';
 import { eq, desc } from 'drizzle-orm';
 import openai from '../utils/openai.js';
 
 export const chatRoute = async (req, res) => {
+  const start = Date.now();
+  let statusCode = 200;
+  
   try {
     const { id: conversationId } = req.params;
     const { message } = req.body;
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      statusCode = 400;
       return res.status(400).json({ error: 'message is required and must be a non-empty string' });
     }
 
@@ -92,12 +96,41 @@ export const chatRoute = async (req, res) => {
       console.error('Error queueing memory job:', error);
     });
 
+    const durationMs = Date.now() - start;
+    
+    loggingQueue.add('log', {
+      type: 'api_request',
+      data: {
+        userId: req.user.id,
+        endpoint: '/chat',
+        statusCode: 200,
+        durationMs,
+      },
+    }).catch(error => {
+      console.error('Error queueing API request log:', error);
+    });
+
     return res.status(200).json({
       reply: assistantReply,
       messageId: assistantMessage.id,
     });
   } catch (error) {
     console.error('Error in chat route:', error);
+    statusCode = 500;
+    const durationMs = Date.now() - start;
+    
+    loggingQueue.add('log', {
+      type: 'api_request',
+      data: {
+        userId: req.user.id,
+        endpoint: '/chat',
+        statusCode,
+        durationMs,
+      },
+    }).catch(logError => {
+      console.error('Error queueing API request log:', logError);
+    });
+    
     return res.status(500).json({ error: 'Internal server error' });
   }
 };

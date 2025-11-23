@@ -8,9 +8,24 @@ import { askRoute } from './routes/ask.js';
 import { chatRoute } from './routes/chat.js';
 import { registerRoute, loginRoute, logoutRoute } from './routes/auth.js';
 import { createApiKeyRoute, getApiKeysRoute } from './routes/api-keys.js';
+import {
+  getMemoriesRoute,
+  getOnThisDayRoute,
+  searchMemoriesRoute,
+  getRandomMemoryRoute,
+  getTimelineRoute,
+  exportMemoriesRoute,
+  getApiUsageRoute,
+  getRetrievalEventsRoute,
+  getVectorHealthRoute,
+  addManualMemoryRoute,
+  getRawMemoriesRoute,
+  getRequestLogsRoute,
+} from './routes/dashboard.js';
 import { authenticate } from './middleware/auth.js';
 import { startMemoryProcessor } from './workers/memory-processor.js';
 import { startSummaryProcessor } from './workers/summary-processor.js';
+import { startLoggingProcessor } from './workers/logging-processor.js';
 import { summaryUpdateQueue } from './config/queue.js';
 import { db } from './config/db.js';
 import { conversations } from './config/schema.js';
@@ -59,9 +74,25 @@ app.get('/conversations', authenticate, getConversationsRoute);
 app.post('/conversations', authenticate, createConversationRoute);
 app.post('/conversations/:id/messages', authenticate, createMessageRoute);
 app.post('/conversations/:id/chat', authenticate, chatRoute);
-app.post('/conversations/:id/ask', askRoute);
+app.post('/conversations/:id/ask', authenticate, askRoute);
 app.get('/api-keys', authenticate, getApiKeysRoute);
 app.post('/api-keys', authenticate, createApiKeyRoute);
+
+// Dashboard routes - "Your Mind" tab
+app.get('/conversations/:id/memories', authenticate, getMemoriesRoute);
+app.get('/conversations/:id/memories/on-this-day', authenticate, getOnThisDayRoute);
+app.get('/conversations/:id/memories/search', authenticate, searchMemoriesRoute);
+app.get('/conversations/:id/memories/random', authenticate, getRandomMemoryRoute);
+app.get('/conversations/:id/memories/timeline', authenticate, getTimelineRoute);
+app.get('/conversations/:id/memories/export', authenticate, exportMemoriesRoute);
+
+// Dashboard routes - "Developer Portal" tab
+app.get('/conversations/:id/analytics/usage', authenticate, getApiUsageRoute);
+app.get('/conversations/:id/analytics/retrievals', authenticate, getRetrievalEventsRoute);
+app.get('/conversations/:id/analytics/vector-health', authenticate, getVectorHealthRoute);
+app.post('/conversations/:id/memories/manual', authenticate, addManualMemoryRoute);
+app.get('/conversations/:id/memories/raw', authenticate, getRawMemoriesRoute);
+app.get('/conversations/:id/analytics/requests', authenticate, getRequestLogsRoute);
 
 const PORT = process.env.PORT || 4000;
 
@@ -95,6 +126,7 @@ app.listen(PORT, async () => {
   
   startMemoryProcessor();
   startSummaryProcessor();
+  startLoggingProcessor();
   
   await setupPeriodicSummaryJobs();
 });
