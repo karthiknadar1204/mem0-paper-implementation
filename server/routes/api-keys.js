@@ -1,5 +1,6 @@
 import { db } from '../config/db.js';
 import { apiKeys } from '../config/schema.js';
+import { eq, desc } from 'drizzle-orm';
 import crypto from 'crypto';
 
 const hashApiKey = (apiKey) => {
@@ -9,6 +10,30 @@ const hashApiKey = (apiKey) => {
 const generateApiKey = () => {
   const randomBytes = crypto.randomBytes(32);
   return `sk_${randomBytes.toString('hex')}`;
+};
+
+export const getApiKeysRoute = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const userApiKeys = await db
+      .select({
+        id: apiKeys.id,
+        keyPrefix: apiKeys.keyPrefix,
+        name: apiKeys.name,
+        isActive: apiKeys.isActive,
+        createdAt: apiKeys.createdAt,
+        lastUsedAt: apiKeys.lastUsedAt,
+      })
+      .from(apiKeys)
+      .where(eq(apiKeys.userId, userId))
+      .orderBy(desc(apiKeys.createdAt));
+
+    return res.status(200).json(userApiKeys);
+  } catch (error) {
+    console.error('Error fetching API keys:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
 };
 
 export const createApiKeyRoute = async (req, res) => {

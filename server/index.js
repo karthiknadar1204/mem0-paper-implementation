@@ -6,7 +6,7 @@ import { createConversationRoute, getConversationsRoute } from './routes/convers
 import { createMessageRoute } from './routes/messages.js';
 import { askRoute } from './routes/ask.js';
 import { registerRoute, loginRoute, logoutRoute } from './routes/auth.js';
-import { createApiKeyRoute } from './routes/api-keys.js';
+import { createApiKeyRoute, getApiKeysRoute } from './routes/api-keys.js';
 import { authenticate } from './middleware/auth.js';
 import { startMemoryProcessor } from './workers/memory-processor.js';
 import { startSummaryProcessor } from './workers/summary-processor.js';
@@ -26,10 +26,14 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
+    if (!origin) {
+      // Allow requests with no origin (like mobile apps or curl)
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, origin);
     } else {
-      callback(new Error('CORS policy: Origin ' + origin + ' not allowed'));
+      return callback(new Error('CORS policy: Origin ' + origin + ' not allowed'));
     }
   },
   credentials: true,
@@ -54,6 +58,7 @@ app.get('/conversations', authenticate, getConversationsRoute);
 app.post('/conversations', authenticate, createConversationRoute);
 app.post('/conversations/:id/messages', authenticate, createMessageRoute);
 app.post('/conversations/:id/ask', askRoute);
+app.get('/api-keys', authenticate, getApiKeysRoute);
 app.post('/api-keys', authenticate, createApiKeyRoute);
 
 const PORT = process.env.PORT || 4000;

@@ -52,13 +52,10 @@ export const api = {
 
   async checkAuth() {
     try {
-      // Check health endpoint with credentials to verify cookie
       const response = await fetch(`${API_URL}/health`, {
         method: 'GET',
         credentials: 'include',
       });
-      // If we have a token in localStorage, assume we're authenticated
-      // The actual auth will be checked on protected routes
       return localStorage.getItem('isLoggedIn') === 'true';
     } catch (error) {
       return false;
@@ -92,6 +89,38 @@ export const api = {
     if (!response.ok) {
       const error = await response.json();
       throw new Error(error.error || 'Failed to create conversation');
+    }
+
+    return response.json();
+  },
+
+  async getApiKeys() {
+    const response = await fetch(`${API_URL}/api-keys`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch API keys');
+    }
+
+    return response.json();
+  },
+
+  async createApiKey(name) {
+    const response = await fetch(`${API_URL}/api-keys`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ name }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create API key');
     }
 
     return response.json();
