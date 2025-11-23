@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { X } from "lucide-react"
-import { api } from "../lib/api"
+import { api } from "@/lib/api"
 
 export default function AuthModal({ isOpen, onClose, mode = "signup", onLoginSuccess }) {
   const [isSignup, setIsSignup] = useState(mode === "signup")

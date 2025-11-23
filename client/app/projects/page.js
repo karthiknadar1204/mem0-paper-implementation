@@ -117,9 +117,17 @@ export default function ProjectsPage() {
                     key={conversation.id}
                     className="bg-[#0a0a0a] border border-white/10 rounded-lg p-6 hover:border-white/20 transition-colors"
                   >
-                    <h3 className="text-xl font-bold mb-2">
-                      {conversation.name || `Project ${conversation.id.slice(0, 8)}`}
-                    </h3>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-xl font-bold">
+                        {conversation.name || `Project ${conversation.id.slice(0, 8)}`}
+                      </h3>
+                      <a
+                        href={`/projects/dashboard/${conversation.id}`}
+                        className="px-4 py-2 bg-white hover:bg-gray-200 text-black font-bold rounded-sm transition-colors text-sm"
+                      >
+                        View Dashboard
+                      </a>
+                    </div>
                     <div className="flex items-center gap-2 mb-2">
                       <p className="text-sm text-gray-400">
                         ID: <code className="text-white font-mono text-xs">{conversation.id}</code>
