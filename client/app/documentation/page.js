@@ -113,26 +113,6 @@ await memory.say("What do you remember about me?");`}</code>
           </div>
         </section>
 
-        {/* Conversation Management */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">Conversation Management</h2>
-          <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-6">
-            <pre className="text-sm text-gray-300 overflow-x-auto">
-              <code>{`// List all conversations
-const conversations = await memory.listConversations();
-
-// Create new conversation
-const newId = await memory.createConversation("My Project");
-
-// Get current conversation ID
-const id = memory.getConversationId();
-
-// Switch conversation
-memory.setConversation("new-conversation-id");`}</code>
-            </pre>
-          </div>
-        </section>
-
         {/* API Reference */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4">API Reference</h2>
@@ -148,22 +128,6 @@ memory.setConversation("new-conversation-id");`}</code>
             <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-4">
               <h3 className="font-semibold mb-2">ask(question: string): Promise&lt;string&gt;</h3>
               <p className="text-sm text-gray-400">Ask question using long-term memory.</p>
-            </div>
-            <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-4">
-              <h3 className="font-semibold mb-2">listConversations(): Promise&lt;Array&gt;</h3>
-              <p className="text-sm text-gray-400">List all conversations for the authenticated user.</p>
-            </div>
-            <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-4">
-              <h3 className="font-semibold mb-2">createConversation(name?: string): Promise&lt;string&gt;</h3>
-              <p className="text-sm text-gray-400">Create new conversation and return its ID.</p>
-            </div>
-            <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-4">
-              <h3 className="font-semibold mb-2">getConversationId(): string</h3>
-              <p className="text-sm text-gray-400">Get current conversation ID.</p>
-            </div>
-            <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-4">
-              <h3 className="font-semibold mb-2">setConversation(conversationId: string): void</h3>
-              <p className="text-sm text-gray-400">Switch to different conversation.</p>
             </div>
           </div>
         </section>
