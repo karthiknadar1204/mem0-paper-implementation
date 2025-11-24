@@ -6,12 +6,37 @@ import { db } from '../config/db.js';
 import { conversations } from '../config/schema.js';
 import { eq } from 'drizzle-orm';
 
-const connection = new IORedis(process.env.REDIS_URL, {
+const connection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', {
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    console.log(`Redis connection retry attempt ${times}, waiting ${delay}ms`);
+    return delay;
+  },
+  reconnectOnError: (err) => {
+    console.error('Redis connection error:', err.message);
+    return true;
+  },
+});
+
+connection.on('connect', () => {
+  console.log('Summary processor: Redis connected');
+});
+
+connection.on('error', (err) => {
+  console.error('Summary processor: Redis error:', err);
+});
+
+connection.on('ready', () => {
+  console.log('Summary processor: Redis ready');
 });
 
 export const startSummaryProcessor = () => {
+  if (!process.env.REDIS_URL) {
+    console.error('WARNING: REDIS_URL not set. Summary processor may not work correctly.');
+  }
+
   const worker = new Worker(
     'summary-update',
     async (job) => {

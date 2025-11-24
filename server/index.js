@@ -76,6 +76,7 @@ app.get('/health', async (req, res) => {
   });
 });
 
+
 app.post('/register', registerRoute);
 app.post('/login', loginRoute);
 app.post('/logout', logoutRoute);
@@ -139,10 +140,20 @@ const setupPeriodicSummaryJobs = async () => {
 
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Redis URL: ${process.env.REDIS_URL ? 'Set' : 'NOT SET - Workers may not work!'}`);
   
-  startMemoryProcessor();
-  startSummaryProcessor();
-  startLoggingProcessor();
+  try {
+    startMemoryProcessor();
+    startSummaryProcessor();
+    startLoggingProcessor();
+    console.log('All background workers started');
+  } catch (error) {
+    console.error('Error starting background workers:', error);
+  }
   
-  await setupPeriodicSummaryJobs();
+  try {
+    await setupPeriodicSummaryJobs();
+  } catch (error) {
+    console.error('Error setting up periodic jobs:', error);
+  }
 });

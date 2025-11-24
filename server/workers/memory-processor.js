@@ -7,12 +7,37 @@ import { processFact } from '../services/memory-updater.js';
 import { summaryUpdateQueue } from '../config/queue.js';
 import { eq, and, desc } from 'drizzle-orm';
 
-const connection = new IORedis(process.env.REDIS_URL, {
+const connection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', {
   maxRetriesPerRequest: null,
   enableReadyCheck: false,
+  retryStrategy: (times) => {
+    const delay = Math.min(times * 50, 2000);
+    console.log(`Redis connection retry attempt ${times}, waiting ${delay}ms`);
+    return delay;
+  },
+  reconnectOnError: (err) => {
+    console.error('Redis connection error:', err.message);
+    return true;
+  },
+});
+
+connection.on('connect', () => {
+  console.log('Memory processor: Redis connected');
+});
+
+connection.on('error', (err) => {
+  console.error('Memory processor: Redis error:', err);
+});
+
+connection.on('ready', () => {
+  console.log('Memory processor: Redis ready');
 });
 
 export const startMemoryProcessor = () => {
+  if (!process.env.REDIS_URL) {
+    console.error('WARNING: REDIS_URL not set. Memory processor may not work correctly.');
+  }
+
   const worker = new Worker(
     'memory-process',
     async (job) => {

@@ -685,3 +685,42 @@ const currentId = memory.getConversationId();
 | `.listConversations()` | List all conversations | `GET /conversations` | Array |
 
 The SDK provides a simple interface: use `.say()` for most cases, or use `.chat()`/`.ask()` when you need explicit control.
+
+Reviewing the SDK implementation to classify `.say()` and `.chat()`:
+
+## Classification
+
+### `.chat()` = Conversation (finite context)
+- Purpose: Normal conversational flow
+- Endpoint: `/conversations/:id/chat`
+- Context: Recent messages + summary (finite window)
+- Behavior: Immediate LLM response, background memory extraction
+- Use case: Regular chat, statements, ongoing conversation
+
+### `.say()` = Smart router (conversation or infinite context)
+- Purpose: Auto-routes based on message content
+- Behavior:
+  - If heuristics detect a question/memory query → routes to `.ask()` (infinite context)
+  - Otherwise → routes to `.chat()` (conversation)
+- Use case: Single method that picks the right path
+
+### `.ask()` = Infinite context API
+- Purpose: Long-term memory recall
+- Endpoint: `/conversations/:id/ask`
+- Context: Retrieves relevant memories from Pinecone (not limited by context window)
+- Behavior: Answers using stored memories
+- Use case: Questions about past information
+
+## Summary
+
+| Method | Type | Context Window |
+|--------|------|----------------|
+| `.chat()` | **Conversation** | Finite (recent messages + summary) |
+| `.say()` | **Smart Router** | Either (routes to chat or ask) |
+| `.ask()` | **Infinite Context API** | Infinite (via Pinecone memory retrieval) |
+
+So:
+- `.chat()` = Conversation (finite context)
+- `.say()` = Router that can be conversation or infinite context (depends on routing decision)
+
+The "infinite context" capability comes from `.ask()`, which `.say()` can route to automatically.
