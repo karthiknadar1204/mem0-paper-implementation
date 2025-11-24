@@ -1,6 +1,6 @@
 import { retrieveRelevantMemories } from '../services/retrieval.js';
 import { buildAnswerPrompt } from '../utils/prompts.js';
-import openai from '../utils/openai.js';
+import { buildLLMContext, resolveLLMRequest, runChatCompletion, LLMError } from '../utils/llm-client.js';
 import { loggingQueue } from '../config/queue.js';
 
 export const askRoute = async (req, res) => {
@@ -22,8 +22,9 @@ export const askRoute = async (req, res) => {
 
     const prompt = buildAnswerPrompt(relevantMemories, question);
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const llmContext = buildLLMContext(resolveLLMRequest(req.body));
+    const answer = await runChatCompletion({
+      context: llmContext,
       messages: [
         {
           role: 'system',
@@ -35,10 +36,8 @@ export const askRoute = async (req, res) => {
         },
       ],
       temperature: 0.3,
-      max_tokens: 500,
+      maxTokens: 500,
     });
-
-    const answer = response.choices[0].message.content.trim();
     const durationMs = Date.now() - start;
 
     const topMemoryIds = relevantMemories
@@ -76,7 +75,7 @@ export const askRoute = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in ask route:', error);
-    statusCode = 500;
+    statusCode = error instanceof LLMError ? error.statusCode : 500;
     const durationMs = Date.now() - start;
     
     loggingQueue.add('log', {
@@ -90,6 +89,10 @@ export const askRoute = async (req, res) => {
     }).catch(logError => {
       console.error('Error queueing API request log:', logError);
     });
+    
+    if (error instanceof LLMError) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
     
     return res.status(500).json({ error: 'Internal server error' });
   }

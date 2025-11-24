@@ -2,7 +2,7 @@ import { db } from '../config/db.js';
 import { messages, summaries } from '../config/schema.js';
 import { memoryProcessQueue, loggingQueue } from '../config/queue.js';
 import { eq, desc } from 'drizzle-orm';
-import openai from '../utils/openai.js';
+import { buildLLMContext, resolveLLMRequest, runChatCompletion, LLMError } from '../utils/llm-client.js';
 
 export const chatRoute = async (req, res) => {
   const start = Date.now();
@@ -65,8 +65,9 @@ export const chatRoute = async (req, res) => {
       content: message.trim(),
     });
 
-    const llmResponse = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const llmContext = buildLLMContext(resolveLLMRequest(req.body));
+    const assistantReply = await runChatCompletion({
+      context: llmContext,
       messages: [
         {
           role: 'system',
@@ -75,10 +76,8 @@ export const chatRoute = async (req, res) => {
         ...contextMessages,
       ],
       temperature: 0.7,
-      max_tokens: 500,
+      maxTokens: 500,
     });
-
-    const assistantReply = llmResponse.choices[0].message.content.trim();
 
     const [assistantMessage] = await db
       .insert(messages)
@@ -116,7 +115,7 @@ export const chatRoute = async (req, res) => {
     });
   } catch (error) {
     console.error('Error in chat route:', error);
-    statusCode = 500;
+    statusCode = error instanceof LLMError ? error.statusCode : 500;
     const durationMs = Date.now() - start;
     
     loggingQueue.add('log', {
@@ -131,6 +130,10 @@ export const chatRoute = async (req, res) => {
       console.error('Error queueing API request log:', logError);
     });
     
+    if (error instanceof LLMError) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
