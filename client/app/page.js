@@ -127,8 +127,8 @@ export default function LandingPage() {
               </motion.h1>
 
               <motion.p variants={fadeInUp} className="text-lg md:text-xl text-gray-400 mb-10 max-w-xl leading-relaxed">
-                A dedicated memory layer for your AI agents. Store, recall, and manage long-term context without the
-                complexity of vector databases.
+                Persistent memory for AI applications. Smart routing, automatic memory extraction, and infinite context recall. 
+                One SDK, three methods, unlimited conversations.
               </motion.p>
 
               <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center gap-4">
@@ -164,53 +164,56 @@ export default function LandingPage() {
                   <div className="ml-4 text-xs text-gray-500 font-mono">example.ts</div>
                 </div>
                 <div className="p-6 font-mono text-sm overflow-x-auto">
-                  <div className="text-gray-500 mb-4">// Initialize normalmemory</div>
+                  <div className="text-gray-500 mb-4">// Initialize SDK</div>
                   <div className="flex">
                     <span className="text-purple-400">import</span>
                     <span className="text-white mx-2">
-                      {"{"} Memory {"}"}
+                      {"{"} NormalMemory {"}"}
                     </span>
                     <span className="text-purple-400">from</span>
-                    <span className="text-green-400 mx-2">"normalmemory"</span>
+                    <span className="text-green-400 mx-2">"normal-memory"</span>
                   </div>
                   <div className="mt-2">
                     <span className="text-purple-400">const</span>
                     <span className="text-blue-400 mx-2">memory</span>
                     <span className="text-white">=</span>
                     <span className="text-purple-400 mx-2">new</span>
-                    <span className="text-yellow-400">Memory</span>
-                    <span className="text-gray-400">()</span>
+                    <span className="text-yellow-400">NormalMemory</span>
+                    <span className="text-gray-400">({"{"}</span>
                   </div>
+                  <div className="pl-4 text-blue-300">
+                    apiKey: <span className="text-green-400">"sk_..."</span>,
+                  </div>
+                  <div className="pl-4 text-blue-300">
+                    conversationId: <span className="text-green-400">"..."</span>
+                  </div>
+                  <div className="text-gray-400">{"})"}</div>
 
-                  <div className="text-gray-500 mt-6 mb-4">// Store user preferences</div>
+                  <div className="text-gray-500 mt-6 mb-4">// Smart routing - auto-detects intent</div>
                   <div>
                     <span className="text-purple-400">await</span>
                     <span className="text-blue-400 mx-1">memory</span>
                     <span className="text-gray-400">.</span>
-                    <span className="text-yellow-400">add</span>
+                    <span className="text-yellow-400">say</span>
                     <span className="text-gray-400">(</span>
-                    <span className="text-green-400">"User likes concise answers."</span>
-                    <span className="text-gray-400">, {"{"}</span>
+                    <span className="text-green-400">"I'm Alex, I'm vegan"</span>
+                    <span className="text-gray-400">)</span>
                   </div>
-                  <div className="pl-4 text-blue-300">
-                    userId: <span className="text-green-400">"alex_123"</span>
-                  </div>
-                  <div className="text-gray-400">{"})"}</div>
 
-                  <div className="text-gray-500 mt-6 mb-4">// Retrieve context automatically</div>
+                  <div className="text-gray-500 mt-6 mb-4">// Memory recall - infinite context</div>
                   <div>
                     <span className="text-purple-400">const</span>
-                    <span className="text-blue-400 mx-2">context</span>
+                    <span className="text-blue-400 mx-2">answer</span>
                     <span className="text-white">=</span>
                     <span className="text-purple-400 mx-2">await</span>
                     <span className="text-blue-400">memory</span>
                     <span className="text-gray-400">.</span>
-                    <span className="text-yellow-400">search</span>
+                    <span className="text-yellow-400">ask</span>
                     <span className="text-gray-400">(</span>
-                    <span className="text-green-400">"How should I reply?"</span>
+                    <span className="text-green-400">"What's my diet?"</span>
                     <span className="text-gray-400">)</span>
                   </div>
-                  <div className="mt-4 text-gray-500">{">"} [ "User prefers concise answers." ]</div>
+                  <div className="mt-4 text-gray-500">{">"} "You're vegan, Alex."</div>
                 </div>
               </div>
             </motion.div>
@@ -221,43 +224,52 @@ export default function LandingPage() {
       <section className="py-24 px-6 bg-[#050505]">
         <div className="container mx-auto max-w-6xl">
           <div className="text-left mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-6">Core Architecture</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6">Core Features</h2>
             <p className="text-gray-400 max-w-2xl">
-              Built on a high-performance vector engine with graph-based relationships. Designed to be the hippocampus
-              for your LLM applications.
+              Built on PostgreSQL and Pinecone. Automatic memory extraction, smart routing, and infinite context recall.
+              Designed to be the memory layer for your AI applications.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             <div className="md:col-span-2 bg-[#0a0a0a] border border-white/10 p-8 rounded-lg hover:border-white/20 transition-colors">
               <Brain className="w-10 h-10 text-white mb-6" />
-              <h3 className="text-xl font-bold mb-3 text-white">Adaptive Memory Graph</h3>
+              <h3 className="text-xl font-bold mb-3 text-white">Smart Routing</h3>
               <p className="text-gray-400 leading-relaxed">
-                normalmemory doesn't just store vectors; it builds relationships between entities. If a user mentions
-                they moved to New York, old location data is automatically deprecated while keeping historical context
-                intact.
+                The <code className="text-white">.say()</code> method automatically detects user intent. Questions route to memory recall,
+                statements route to conversation. No manual routing needed.
               </p>
             </div>
             <div className="bg-[#0a0a0a] border border-white/10 p-8 rounded-lg hover:border-white/20 transition-colors">
               <Zap className="w-10 h-10 text-white mb-6" />
-              <h3 className="text-xl font-bold mb-3 text-white">Sub-20ms Latency</h3>
+              <h3 className="text-xl font-bold mb-3 text-white">Automatic Extraction</h3>
               <p className="text-gray-400 leading-relaxed">
-                Optimized for real-time chat applications. Retrieval happens in parallel with LLM processing.
+                Memories are extracted automatically in the background. Facts, preferences, and entities are stored
+                without manual intervention.
               </p>
             </div>
             <div className="bg-[#0a0a0a] border border-white/10 p-8 rounded-lg hover:border-white/20 transition-colors">
-              <Lock className="w-10 h-10 text-white mb-6" />
-              <h3 className="text-xl font-bold mb-3 text-white">Data Sovereignty</h3>
+              <Database className="w-10 h-10 text-white mb-6" />
+              <h3 className="text-xl font-bold mb-3 text-white">Infinite Context</h3>
               <p className="text-gray-400 leading-relaxed">
-                Run it locally via Docker or on your own VPC. Your memory data never leaves your infrastructure.
+                The <code className="text-white">.ask()</code> method retrieves relevant memories from Pinecone, giving you
+                unlimited context beyond token limits.
+              </p>
+            </div>
+            <div className="bg-[#0a0a0a] border border-white/10 p-8 rounded-lg hover:border-white/20 transition-colors">
+              <Activity className="w-10 h-10 text-white mb-6" />
+              <h3 className="text-xl font-bold mb-3 text-white">Conversation Management</h3>
+              <p className="text-gray-400 leading-relaxed">
+                Multiple conversations per user. Each conversation maintains its own memory graph and summary.
+                Switch between projects seamlessly.
               </p>
             </div>
             <div className="md:col-span-2 bg-[#0a0a0a] border border-white/10 p-8 rounded-lg hover:border-white/20 transition-colors">
               <Layers className="w-10 h-10 text-white mb-6" />
-              <h3 className="text-xl font-bold mb-3 text-white">Universal API</h3>
+              <h3 className="text-xl font-bold mb-3 text-white">Three Simple Methods</h3>
               <p className="text-gray-400 leading-relaxed">
-                Works with OpenAI, Anthropic, Llama, or any custom model. The memory layer is decoupled from the
-                inference layer, allowing you to switch models without losing user context.
+                <code className="text-white">.say()</code> for smart routing, <code className="text-white">.chat()</code> for conversations,
+                <code className="text-white">.ask()</code> for memory recall. That's it. No complex setup, no manual memory management.
               </p>
             </div>
           </div>
@@ -270,14 +282,14 @@ export default function LandingPage() {
             <div>
               <h2 className="text-3xl md:text-4xl font-bold mb-6">Seamless Integration</h2>
               <p className="text-gray-400 mb-8">
-                Add long-term memory to your Vercel AI SDK, LangChain, or custom agent setup in lines of code.
+                Add persistent memory to your AI applications in minutes. Works with any LLM, any framework.
               </p>
 
               <div className="space-y-6">
                 {[
-                  { title: "Initialize Client", desc: "Connect to your self-hosted or managed instance." },
-                  { title: "Add Memories", desc: "Push unstructured text; we handle the embeddings." },
-                  { title: "Query Context", desc: "Retrieve relevant memories based on semantic similarity." },
+                  { title: "Install SDK", desc: "npm install normal-memory - one package, zero config." },
+                  { title: "Initialize", desc: "Pass your API key and conversation ID. That's it." },
+                  { title: "Use .say()", desc: "Smart routing handles everything. Questions → memory, statements → chat." },
                 ].map((step, i) => (
                   <div key={i} className="flex gap-4">
                     <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#111] border border-white/10 flex items-center justify-center font-mono text-sm">
@@ -294,35 +306,26 @@ export default function LandingPage() {
 
             <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-6 font-mono text-xs md:text-sm text-gray-400">
               <div className="flex gap-4 mb-6 border-b border-white/5 pb-4">
-                <div className="text-white border-b border-white px-2 pb-4 -mb-4.5">api/chat/route.ts</div>
-                <div className="px-2 pb-4 cursor-pointer hover:text-gray-300">lib/memory.ts</div>
+                <div className="text-white border-b border-white px-2 pb-4 -mb-4.5">app.js</div>
               </div>
               <pre className="overflow-x-auto">
-                {`export async function POST(req: Request) {
-  const { messages } = await req.json();
-  const lastMessage = messages[messages.length - 1];
+                {`import { NormalMemory } from 'normal-memory';
 
-  // 1. Retrieve relevant context
-  const context = await memory.search(lastMessage.content);
-  
-  // 2. Inject into system prompt
-  const systemPrompt = \`
-    You are a helpful assistant.
-    Context: \${context.map(m => m.content).join("\\n")}
-  \`;
+const memory = new NormalMemory({
+  apiKey: 'sk_...',
+  conversationId: '...',
+});
 
-  // 3. Generate response
-  const result = await streamText({
-    model: openai("gpt-4"),
-    system: systemPrompt,
-    messages,
-  });
+// Smart routing - handles everything
+await memory.say("I'm Alex, I'm vegan");
 
-  // 4. Save new interaction asynchronously
-  ctx.waitUntil(memory.add(lastMessage.content));
+// Memory recall - infinite context
+const answer = await memory.ask("What's my diet?");
+// → "You're vegan, Alex."
 
-  return result.toUIMessageStreamResponse();
-}`}
+// Direct conversation
+const reply = await memory.chat("How are you?");
+// → Immediate LLM response`}
               </pre>
             </div>
           </div>
@@ -332,26 +335,26 @@ export default function LandingPage() {
       <section className="py-24 px-6 bg-[#0a0a0a] border-y border-white/10">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Advanced Agents</h2>
-            <p className="text-gray-400">Solving the context window limit for real-world applications.</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Production</h2>
+            <p className="text-gray-400">Real-world applications with persistent memory and smart routing.</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
                 icon: <Globe className="w-6 h-6" />,
-                title: "Personalized Tutors",
-                desc: "Remember a student's learning progress, weak spots, and preferred explanation styles over months of sessions.",
+                title: "AI Assistants",
+                desc: "Remember user preferences, past conversations, and context across sessions. Smart routing handles questions and statements automatically.",
               },
               {
                 icon: <Shield className="w-6 h-6" />,
                 title: "Customer Support",
-                desc: "Recall previous tickets, user details, and specific issues without forcing the user to repeat themselves.",
+                desc: "Recall user history, preferences, and past issues. The .ask() method provides accurate memory-based answers instantly.",
               },
               {
                 icon: <Activity className="w-6 h-6" />,
-                title: "RPG NPCs",
-                desc: "Create characters that remember past interactions with players, building evolving relationships and story arcs.",
+                title: "Conversational Apps",
+                desc: "Multiple conversations per user. Each maintains its own memory graph. Switch between projects seamlessly with conversation IDs.",
               },
             ].map((useCase, i) => (
               <div
@@ -373,7 +376,7 @@ export default function LandingPage() {
       {/* Final CTA */}
       <section className="py-32 px-6 relative overflow-hidden border-t border-white/10">
         <div className="container mx-auto max-w-4xl relative z-10 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-8">Start building stateful agents.</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-8">Start building with persistent memory.</h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href="#"
