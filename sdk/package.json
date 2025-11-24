@@ -37,6 +37,8 @@
   "bugs": {
     "url": "https://github.com/yourusername/normal-memory/issues"
   },
-  "homepage": "https://github.com/yourusername/normal-memory#readme"
+  "homepage": "https://github.com/yourusername/normal-memory#readme",
+  "dependencies": {
+    "@google/genai": "^1.30.0"
+  }
 }
-
