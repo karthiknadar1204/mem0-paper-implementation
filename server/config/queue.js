@@ -3,7 +3,7 @@ import IORedis from 'ioredis';
 
 const connection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', {
   maxRetriesPerRequest: null,  
-  enableReadyCheck: false,
+  enableReadyCheck: false,     
   retryStrategy: (times) => {
     const delay = Math.min(times * 50, 2000);
     return delay;

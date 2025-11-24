@@ -9,6 +9,9 @@ export class NormalMemory {
       conversationId,
       baseUrl = 'https://mem0-paper-implementation-production.up.railway.app',
       model = 'gpt-4o-mini',
+      llmProvider = 'openai',
+      llmApiKey = null,
+      llmModel = null,
       smartRouting = true,
     } = config;
 
@@ -29,6 +32,13 @@ export class NormalMemory {
     this.model = model;
     this.smartRouting = smartRouting;
     this.conversationId = conversationId;
+    this.llmProvider = typeof llmProvider === 'string' ? llmProvider.toLowerCase() : 'openai';
+    this.llmApiKey = llmApiKey;
+    this.llmModel = llmModel || model;
+
+    if (this.llmProvider === 'gemini' && !this.llmApiKey) {
+      throw new Error('llmApiKey is required when llmProvider is set to "gemini"');
+    }
 
     this.client = new HttpClient(baseUrl, apiKey);
     this.conversationManager = new ConversationManager(this.client);
@@ -61,7 +71,10 @@ export class NormalMemory {
 
     const response = await this.client.post(
       `/conversations/${conversationId}/chat`,
-      { message: message.trim() }
+      {
+        message: message.trim(),
+        ...this.buildLLMPayload(),
+      }
     );
 
     return response.reply;
@@ -76,7 +89,10 @@ export class NormalMemory {
 
     const response = await this.client.post(
       `/conversations/${conversationId}/ask`,
-      { question: question.trim() }
+      {
+        question: question.trim(),
+        ...this.buildLLMPayload(),
+      }
     );
 
     return response.answer;
@@ -99,6 +115,24 @@ export class NormalMemory {
 
   async listConversations() {
     return await this.conversationManager.listConversations();
+  }
+
+  buildLLMPayload() {
+    const payload = {};
+
+    if (this.llmProvider) {
+      payload.llmProvider = this.llmProvider;
+    }
+
+    if (this.llmModel) {
+      payload.llmModel = this.llmModel;
+    }
+
+    if (this.llmApiKey) {
+      payload.llmApiKey = this.llmApiKey;
+    }
+
+    return payload;
   }
 }
 

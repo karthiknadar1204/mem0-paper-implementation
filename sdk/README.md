@@ -24,7 +24,10 @@ const memory = new NormalMemory({
   apiKey: 'sk_4f8a9c2d_...',              // Required: Your API key
   conversationId: 'your-conversation-id',  // Required: Conversation ID
   baseUrl: 'https://mem0-paper-implementation-production.up.railway.app',    // Required
-  model: 'gpt-4o-mini',                   // Optional: model name (not currently used)
+  model: 'gpt-4o-mini',                   // Optional: default model
+  llmProvider: 'openai',                  // Optional: 'openai' | 'gemini'
+  llmApiKey: process.env.OPENAI_KEY,      // Optional: Bring-your-own LLM key
+  llmModel: 'gpt-4o-mini',                // Optional: override model per provider
 });
 
 // Step 3: Use it!
@@ -91,8 +94,29 @@ const memory = new NormalMemory({
   apiKey: 'sk_...',              // Required: Your API key from dashboard
   conversationId: '...',         // Required: Conversation ID (get from GET /conversations)
   baseUrl: 'https://mem0-paper-implementation-production.up.railway.app',  // Required: url
-  model: 'gpt-4o-mini',          // Optional: Model name (default: gpt-4o-mini)
+  model: 'gpt-4o-mini',          // Optional: Default OpenAI model
+  llmProvider: 'gemini',         // Optional: Choose 'openai' (default) or 'gemini'
+  llmApiKey: process.env.GEMINI_KEY, // Optional: Bring-your-own LLM API key
+  llmModel: 'gemini-1.5-pro',    // Optional: Provider-specific model
 });
+
+### Bring Your Own LLM
+
+You can route chat/ask responses through your own OpenAI or Gemini account:
+
+```javascript
+const memory = new NormalMemory({
+  apiKey: 'sk_backend_key',         // Normal Memory API key
+  conversationId: 'conversation-id',
+  llmProvider: 'gemini',            // 'openai' (default) or 'gemini'
+  llmApiKey: process.env.GEMINI_KEY,// Required when using Gemini
+  llmModel: 'gemini-1.5-flash',     // Optional provider-specific model
+});
+```
+
+- If you omit `llmProvider`/`llmApiKey`, the backend uses its default OpenAI key (previous behavior).
+- Gemini requests require `llmApiKey` because we never store user LLM keys.
+- Embeddings and background memory processing still use the backend's managed keys.
 ```
 
 ## Backend Requirements
@@ -202,10 +226,13 @@ new NormalMemory(config)
 Creates a new NormalMemory instance.
 
 **Parameters:**
-- `config.apiKey` (string, required): Your API key
+- `config.apiKey` (string, required): Your Normal Memory API key
 - `config.conversationId` (string, required): Conversation ID
 - `config.baseUrl` (string, optional): Backend URL
-- `config.model` (string, optional): Model name
+- `config.model` (string, optional): Default OpenAI model (fallback)
+- `config.llmProvider` (string, optional): `'openai'` (default) or `'gemini'`
+- `config.llmApiKey` (string, optional): BYO LLM API key (required for Gemini)
+- `config.llmModel` (string, optional): Provider-specific model override
 
 ### Methods
 
