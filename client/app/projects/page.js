@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import Link from "next/link"
 import { api } from "../../lib/api"
 import CreateProjectModal from "../../components/CreateProjectModal"
 import CreateApiKeyModal from "../../components/CreateApiKeyModal"
@@ -64,9 +65,20 @@ export default function ProjectsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white flex font-mono">
-      {/* Sidebar */}
-      <div className="w-64 bg-[#0a0a0a] border-r border-white/10 p-6">
+    <div className="min-h-screen bg-[#050505] text-white flex flex-col font-mono">
+      {/* Header */}
+      <div className="w-full border-b border-white/10 p-4 bg-[#050505]">
+        <Link href="/" className="text-xl font-bold tracking-tighter flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center">
+            <div className="w-4 h-4 bg-black rounded-sm" />
+          </div>
+          normalmemory
+        </Link>
+      </div>
+
+      <div className="flex flex-1">
+        {/* Sidebar */}
+        <div className="w-64 bg-[#0a0a0a] border-r border-white/10 p-6">
         <h2 className="text-xl font-bold mb-6">Settings</h2>
         <div className="space-y-2">
           <button
@@ -198,6 +210,7 @@ export default function ProjectsPage() {
             )}
           </div>
         )}
+      </div>
       </div>
 
       <CreateProjectModal

@@ -132,13 +132,15 @@ export default function LandingPage() {
               </motion.p>
 
               <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center gap-4">
-                <Link
-                  href="#"
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText('npm install normal-memory')
+                  }}
                   className="w-full sm:w-auto px-8 py-4 bg-white text-black font-bold rounded-sm hover:bg-gray-200 transition-all flex items-center justify-center gap-2"
                 >
                   <Terminal className="w-4 h-4" />
                   npm install normalmemory
-                </Link>
+                </button>
                 <Link
                   href="/documentation"
                   className="w-full sm:w-auto px-8 py-4 bg-[#111] hover:bg-[#222] text-white border border-white/10 rounded-sm transition-colors flex items-center justify-center gap-2"
@@ -379,7 +381,7 @@ const reply = await memory.chat("How are you?");
           <h2 className="text-4xl md:text-5xl font-bold mb-8">Start building with persistent memory.</h2>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
-              href="#"
+              href="/projects"
               className="w-full sm:w-auto px-8 py-4 bg-white text-black font-bold rounded-sm hover:bg-gray-200 transition-colors"
             >
               Get Started

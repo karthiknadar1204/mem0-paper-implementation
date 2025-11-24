@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useState, useEffect } from "react"
 import { useParams, useSearchParams, useRouter } from "next/navigation"
 import { api } from "@/lib/api"
@@ -70,7 +71,15 @@ export default function DashboardPage() {
       <div className="border-b border-white/10 bg-[#0a0a0a]">
         <div className="container mx-auto px-6 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Normal Memory</h1>
+            <Link
+              href="/"
+              className="text-2xl font-bold tracking-tighter flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <div className="w-8 h-8 bg-white rounded-sm flex items-center justify-center">
+                <div className="w-4 h-4 bg-black rounded-sm" />
+              </div>
+              normalmemory
+            </Link>
             <p className="text-sm text-gray-400">{conversation.name || `Project ${conversationId.slice(0, 8)}`}</p>
           </div>
           <div className="flex items-center gap-4">
