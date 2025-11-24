@@ -8,7 +8,6 @@ export class NormalMemory {
       apiKey,
       conversationId,
       baseUrl = 'https://mem0-paper-implementation-production.up.railway.app',
-      model = 'gpt-4o-mini',
       llmProvider = 'openai',
       llmApiKey = null,
       llmModel = null,
@@ -29,15 +28,14 @@ export class NormalMemory {
 
     this.apiKey = apiKey;
     this.baseUrl = baseUrl.replace(/\/$/, '');
-    this.model = model;
     this.smartRouting = smartRouting;
     this.conversationId = conversationId;
     this.llmProvider = typeof llmProvider === 'string' ? llmProvider.toLowerCase() : 'openai';
-    this.llmApiKey = llmApiKey;
+    this.llmApiKey = typeof llmApiKey === 'string' ? llmApiKey.trim() : '';
     this.llmModel = llmModel || model;
 
-    if (this.llmProvider === 'gemini' && !this.llmApiKey) {
-      throw new Error('llmApiKey is required when llmProvider is set to "gemini"');
+    if (!this.llmApiKey) {
+      throw new Error('llmApiKey is required. Please provide your own OpenAI or Gemini key.');
     }
 
     this.client = new HttpClient(baseUrl, apiKey);
@@ -118,21 +116,11 @@ export class NormalMemory {
   }
 
   buildLLMPayload() {
-    const payload = {};
-
-    if (this.llmProvider) {
-      payload.llmProvider = this.llmProvider;
-    }
-
-    if (this.llmModel) {
-      payload.llmModel = this.llmModel;
-    }
-
-    if (this.llmApiKey) {
-      payload.llmApiKey = this.llmApiKey;
-    }
-
-    return payload;
+    return {
+      llmProvider: this.llmProvider,
+      llmModel: this.llmModel,
+      llmApiKey: this.llmApiKey,
+    };
   }
 }
 

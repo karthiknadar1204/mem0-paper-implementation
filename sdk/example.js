@@ -2,6 +2,8 @@
 
 import { NormalMemory } from './src/index.js';
 
+const userLlmKey = process.env.OPENAI_KEY || 'sk_your_openai_key_here';
+
 async function example() {
   try {
     // Step 1: First, get your API key and list conversations
@@ -13,13 +15,12 @@ async function example() {
     
     // Step 2: Initialize SDK with required conversationId
     const memory = new NormalMemory({
-      apiKey: 'sk_8d93146f1647f21e8f519a72858add000ad7566739e3b5358d15f4ecab49bc25', // Your API key
+      apiKey: 'sk_8d93146f1647f21e8f519a72858add000ad7566739e3b5358d15f4ecab49bc25', // Backend API key
       conversationId: conversationId, // REQUIRED: Conversation ID
-      baseUrl: 'http://localhost:4000', // Optional: Your backend URL
-      model: 'gpt-4o-mini', // Optional: default OpenAI model
-      llmProvider: 'openai', // Optional: 'openai' (default) or 'gemini'
-      llmApiKey: process.env.OPENAI_KEY, // Optional: Bring-your-own OpenAI/Gemini key
-      llmModel: 'gpt-4o-mini', // Optional: provider-specific override
+      baseUrl: 'http://localhost:4000', // Required: Your backend URL
+      llmProvider: 'openai', // Required: 'openai' or 'gemini'
+      llmApiKey: userLlmKey, // REQUIRED: Your own OpenAI/Gemini key
+      llmModel: 'gpt-4o-mini', // Required: provider-specific override
     });
 
     console.log('=== Using conversation:', conversationId, '===');

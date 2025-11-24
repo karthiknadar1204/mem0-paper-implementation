@@ -1,6 +1,5 @@
 import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
-import defaultOpenAI from './openai.js';
 
 const SUPPORTED_PROVIDERS = ['openai', 'gemini'];
 
@@ -43,18 +42,16 @@ export const resolveLLMRequest = (body = {}) => {
 };
 
 const createClient = (provider, apiKey) => {
+  if (!apiKey) {
+    const providerName = provider === 'gemini' ? 'Gemini' : 'OpenAI';
+    throw new LLMError(`${providerName} API key is required for this request.`, 400);
+  }
+
   if (provider === 'gemini') {
-    if (!apiKey) {
-      throw new LLMError('Gemini API key is required when using the Gemini provider.', 400);
-    }
     return new GoogleGenAI({ apiKey, apiVersion: 'v1beta' });
   }
 
-  if (apiKey) {
-    return new OpenAI({ apiKey });
-  }
-
-  return defaultOpenAI;
+  return new OpenAI({ apiKey });
 };
 
 export const buildLLMContext = ({ provider, apiKey, model }) => {
