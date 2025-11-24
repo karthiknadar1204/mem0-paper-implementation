@@ -23,7 +23,7 @@ import { NormalMemory } from 'normal-memory';
 const memory = new NormalMemory({
   apiKey: 'sk_4f8a9c2d_...',              // Required: Your API key
   conversationId: 'your-conversation-id',  // Required: Conversation ID
-  baseUrl: 'https://your-backend.com',    // Optional: defaults to http://localhost:4000
+  baseUrl: 'https://mem0-paper-implementation-production.up.railway.app',    // Required
   model: 'gpt-4o-mini',                   // Optional: model name (not currently used)
 });
 
@@ -54,7 +54,6 @@ await memory.say("What do you remember about my diet?");
 - Detects question patterns (what, who, where, "tell me", "remember", etc.)
 - Routes to `/ask` for memory questions
 - Routes to `/chat` for normal conversation
-- Can be disabled with `smartRouting: false`
 
 ### `memory.chat(message)`
 
@@ -85,51 +84,16 @@ const answer = await memory.ask("What do you know about me?");
 - You're asking about past conversations
 - You need accurate memory-based answers
 
-## Conversation Management
-
-### Getting Conversation ID
-
-```javascript
-// Option 1: List all conversations
-const conversations = await memory.listConversations();
-// Returns: [{ id, name, createdAt }, ...]
-
-// Option 2: Create new conversation
-const newId = await memory.createConversation("My Project");
-// Returns: conversation ID string
-```
-
-### Switching Conversations
-
-```javascript
-// Get current conversation ID
-const currentId = memory.getConversationId();
-
-// Switch to different conversation
-memory.setConversation("new-conversation-id");
-```
-
 ## Configuration
 
 ```javascript
 const memory = new NormalMemory({
   apiKey: 'sk_...',              // Required: Your API key from dashboard
   conversationId: '...',         // Required: Conversation ID (get from GET /conversations)
-  baseUrl: 'https://...',        // Optional: Backend URL (default: http://localhost:4000)
+  baseUrl: 'https://mem0-paper-implementation-production.up.railway.app',  // Required: url
   model: 'gpt-4o-mini',          // Optional: Model name (default: gpt-4o-mini)
-  smartRouting: true,            // Optional: Enable smart routing (default: true)
 });
 ```
-
-### Configuration Options
-
-| Option | Type | Required | Default | Description |
-|--------|------|----------|---------|-------------|
-| `apiKey` | string | ✅ Yes | - | Your API key from the dashboard |
-| `conversationId` | string | ✅ Yes | - | Conversation ID (get from `/conversations` endpoint) |
-| `baseUrl` | string | ❌ No | `http://localhost:4000` | Your backend URL |
-| `model` | string | ❌ No | `gpt-4o-mini` | Model name (for future use) |
-| `smartRouting` | boolean | ❌ No | `true` | Enable automatic routing in `.say()` |
 
 ## Backend Requirements
 
@@ -242,7 +206,6 @@ Creates a new NormalMemory instance.
 - `config.conversationId` (string, required): Conversation ID
 - `config.baseUrl` (string, optional): Backend URL
 - `config.model` (string, optional): Model name
-- `config.smartRouting` (boolean, optional): Enable smart routing
 
 ### Methods
 
@@ -257,22 +220,6 @@ Normal conversation with immediate LLM response.
 #### `ask(question: string): Promise<string>`
 
 Ask question using long-term memory.
-
-#### `getConversationId(): string`
-
-Get current conversation ID.
-
-#### `setConversation(conversationId: string): void`
-
-Switch to different conversation.
-
-#### `createConversation(name?: string): Promise<string>`
-
-Create new conversation and return its ID.
-
-#### `listConversations(): Promise<Array<{id, name, createdAt}>>`
-
-List all conversations for the authenticated user.
 
 ## Error Handling
 
@@ -301,14 +248,6 @@ This SDK requires a running Normal Memory backend. See the main repository for b
 **Required Backend Endpoints:**
 - `POST /conversations/:id/chat` - Conversational chat
 - `POST /conversations/:id/ask` - Memory recall
-- `GET /conversations` - List conversations
-- `POST /conversations` - Create conversation
 
-## License
 
-ISC
 
-## Support
-
-- GitHub Issues: [https://github.com/yourusername/normal-memory/issues](https://github.com/yourusername/normal-memory/issues)
-- Documentation: [https://github.com/yourusername/normal-memory](https://github.com/yourusername/normal-memory)
