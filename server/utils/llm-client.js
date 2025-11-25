@@ -8,8 +8,29 @@ const DEFAULT_MODELS = {
   gemini: 'gemini-2.0-flash',
 };
 
+const SUPPORTED_GEMINI_MODELS = [
+  'gemini-2.5-pro',
+  'gemini-3-pro-preview',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-001',
+  'gemini-2.0-flash-exp',
+  'gemini-2.0-flash-lite',
+  'gemini-2.0-flash-lite-001',
+];
+
 const normalizeGeminiModel = (model) => {
-  return (model && typeof model === 'string') ? model.trim() : DEFAULT_MODELS.gemini;
+  const resolved = (model && typeof model === 'string') ? model.trim().toLowerCase() : DEFAULT_MODELS.gemini;
+
+  if (!SUPPORTED_GEMINI_MODELS.includes(resolved)) {
+    throw new LLMError(
+      `Invalid Gemini model "${model}". Supported models: ${SUPPORTED_GEMINI_MODELS.join(', ')}.`,
+      400
+    );
+  }
+
+  return resolved;
 };
 
 export class LLMError extends Error {
@@ -23,10 +44,16 @@ export class LLMError extends Error {
 
 const normalizeProvider = (provider) => {
   if (!provider || typeof provider !== 'string') {
-    return 'openai';
+    throw new LLMError('llmProvider is required and must be either "openai" or "gemini".', 400);
   }
-  const normalized = provider.toLowerCase();
-  return SUPPORTED_PROVIDERS.includes(normalized) ? normalized : 'openai';
+
+  const normalized = provider.trim().toLowerCase();
+
+  if (!SUPPORTED_PROVIDERS.includes(normalized)) {
+    throw new LLMError('Invalid llmProvider. Supported values are "openai" or "gemini".', 400);
+  }
+
+  return normalized;
 };
 
 export const resolveLLMRequest = (body = {}) => {
@@ -89,7 +116,14 @@ const runOpenAICompletion = async ({ context, messages, temperature, maxTokens, 
 
     return completion.choices[0].message.content.trim();
   } catch (error) {
-    if (error?.status === 401 || error?.status === 403) {
+    const message = (error?.message || '').toLowerCase();
+    const isAuthError =
+      error?.status === 401 ||
+      error?.status === 403 ||
+      message.includes('authentication') ||
+      message.includes('api key');
+
+    if (isAuthError) {
       throw new LLMError('Invalid OpenAI API key. Please double-check your key and try again.', 401, error);
     }
 

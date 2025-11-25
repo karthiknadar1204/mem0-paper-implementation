@@ -42,24 +42,46 @@ export default function DocumentationPage() {
           </div>
         </section>
 
+        {/* Providers */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4">LLM Providers & Models</h2>
+          <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-6 space-y-4 text-sm text-gray-300">
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">OpenAI</h3>
+              <p>Supports every current OpenAI chat/completions model (e.g. <code>gpt-4o</code>, <code>gpt-4o-mini</code>, <code>gpt-4.1</code>, <code>o4-mini</code>, and their real-time variants). Set <code>llmProvider: 'openai'</code> and pass whichever model name you need.</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-white mb-2">Google Gemini</h3>
+              <p>Set <code>llmProvider: 'gemini'</code> plus models like <code>gemini-2.5-pro</code>, <code>gemini-2.5-flash</code>, or <code>gemini-2.0-flash-lite-001</code>. We validate your selection before we hit Google’s API.</p>
+            </div>
+            <p>Your LLM API keys stay client-side—Normal Memory reads them per request only. Embeddings and background pipelines still use our managed infrastructure.</p>
+          </div>
+        </section>
+
         {/* Quick Start */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4">Quick Start</h2>
-          <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-6">
+          <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-6 space-y-4">
             <pre className="text-sm text-gray-300 overflow-x-auto">
               <code>{`import { NormalMemory } from 'normal-memory';
 
 // Initialize SDK
 const memory = new NormalMemory({
-  apiKey: 'sk_...',                                                              // Required: Your API key
-  conversationId: '...',                                                         // Required: Conversation ID
-  baseUrl: 'https://mem0-paper-implementation-production.up.railway.app',        // Optional: Backend URL
+  apiKey: 'sk_backend_api_key',               // Required: Normal Memory API key
+  conversationId: 'conversation-id',          // Required: Conversation ID
+  baseUrl: 'https://your-backend-url.com',    // Required: Backend URL
+  llmProvider: 'openai',                      // Required: 'openai' | 'gemini'
+  llmApiKey: process.env.OPENAI_KEY,          // Required: Bring-your-own LLM key
+  llmModel: 'gpt-4o-mini',                    // Optional: Provider-specific model
 });
 
 // Use it!
 await memory.say("Hi, I'm Alex");
 const answer = await memory.ask("What's my name?");`}</code>
             </pre>
+            <p className="text-sm text-gray-400">
+              Model agnostic: swap <code>llmProvider</code>, <code>llmApiKey</code>, and <code>llmModel</code> to run against any OpenAI chat/completions model or supported Gemini model. Your LLM keys are never stored.
+            </p>
           </div>
         </section>
 
@@ -103,11 +125,13 @@ await memory.say("What do you remember about me?");`}</code>
           <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-6">
             <pre className="text-sm text-gray-300 overflow-x-auto">
               <code>{`const memory = new NormalMemory({
-  apiKey: 'sk_...',              // Required
-  conversationId: '...',         // Required
-  baseUrl: 'https://...',        // Optional: defaults to http://localhost:4000
-  model: 'gpt-4o-mini',          // Optional
-  smartRouting: true,            // Optional: enable smart routing
+  apiKey: 'sk_...',                 // Required
+  conversationId: '...',            // Required
+  baseUrl: 'https://...',           // Required backend URL
+  llmProvider: 'openai',            // Required: 'openai' | 'gemini'
+  llmApiKey: process.env.OPENAI_KEY,// Required: Bring-your-own LLM key
+  llmModel: 'gpt-4o-mini',          // Optional: provider-specific override
+  smartRouting: true,               // Optional: enable smart routing
 });`}</code>
             </pre>
           </div>
