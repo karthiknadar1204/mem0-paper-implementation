@@ -1,6 +1,6 @@
 {
   "name": "normal-memory",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "SDK for Normal Memory - A memory layer for AI applications with persistent conversation memory and smart routing.",
   "main": "src/index.js",
   "type": "module",
