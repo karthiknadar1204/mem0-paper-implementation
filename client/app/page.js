@@ -67,12 +67,12 @@ export default function LandingPage() {
                 >
                   Dashboard
                 </Link>
-                <button
-                  onClick={handleLogout}
-                  className="px-4 py-2 bg-[#111] hover:bg-[#222] text-white text-sm font-bold rounded-sm transition-colors border border-white/10"
-                >
-                  Logout
-                </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-[#111] hover:bg-[#222] text-white text-sm font-bold rounded-sm transition-colors border border-white/10"
+              >
+                Logout
+              </button>
               </>
             ) : (
               <>
@@ -102,7 +102,7 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-6 overflow-hidden border-b border-white/10">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#222_1px,transparent_1px),linear-gradient(to_bottom,#222_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#222_1px,transparent_1px),linear-gradient(to_bottom,#222_1px,transparent_1px)] bg-size-[4rem_4rem] mask-[radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20" />
 
         <div className="container mx-auto max-w-7xl relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -166,7 +166,7 @@ export default function LandingPage() {
                   <div className="ml-4 text-xs text-gray-500 font-mono">example.ts</div>
                 </div>
                 <div className="p-6 font-mono text-sm overflow-x-auto">
-                  <div className="text-gray-500 mb-4">// Initialize SDK</div>
+                  <div className="text-gray-500 mb-4">// Initialize SDK (model agnostic)</div>
                   <div className="flex">
                     <span className="text-purple-400">import</span>
                     <span className="text-white mx-2">
@@ -184,10 +184,23 @@ export default function LandingPage() {
                     <span className="text-gray-400">({"{"}</span>
                   </div>
                   <div className="pl-4 text-blue-300">
-                    apiKey: <span className="text-green-400">"sk_..."</span>,
+                    apiKey: <span className="text-green-400">"sk_backend_api_key"</span>,
                   </div>
                   <div className="pl-4 text-blue-300">
-                    conversationId: <span className="text-green-400">"..."</span>
+                    conversationId: <span className="text-green-400">"conversation-id"</span>,
+                  </div>
+                  <div className="pl-4 text-blue-300">
+                    baseUrl: <span className="text-green-400">"https://api.normalmemory.com"</span>,
+                  </div>
+                  <div className="pl-4 text-blue-300">
+                    llmProvider: <span className="text-green-400">process.env.LLM_PROVIDER</span>,
+                  </div>
+                  <div className="pl-4 text-blue-300">
+                    llmApiKey: <span className="text-green-400">process.env.LLM_API_KEY</span>,
+                  </div>
+                  <div className="pl-4 text-gray-500">// Bring your own OpenAI or Gemini key</div>
+                  <div className="pl-4 text-blue-300">
+                    llmModel: <span className="text-green-400">process.env.LLM_MODEL</span>,
                   </div>
                   <div className="text-gray-400">{"})"}</div>
 
@@ -216,6 +229,20 @@ export default function LandingPage() {
                     <span className="text-gray-400">)</span>
                   </div>
                   <div className="mt-4 text-gray-500">{">"} "You're vegan, Alex."</div>
+
+                  <div className="text-gray-500 mt-6 mb-4">// Direct conversation (Gemini or OpenAI)</div>
+                  <div>
+                    <span className="text-purple-400">const</span>
+                    <span className="text-blue-400 mx-2">reply</span>
+                    <span className="text-white">=</span>
+                    <span className="text-purple-400 mx-2">await</span>
+                    <span className="text-blue-400">memory</span>
+                    <span className="text-gray-400">.</span>
+                    <span className="text-yellow-400">chat</span>
+                    <span className="text-gray-400">(</span>
+                    <span className="text-green-400">"How's my day looking?"</span>
+                    <span className="text-gray-400">)</span>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -235,43 +262,45 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-3 gap-6">
             <div className="md:col-span-2 bg-[#0a0a0a] border border-white/10 p-8 rounded-lg hover:border-white/20 transition-colors">
-              <Brain className="w-10 h-10 text-white mb-6" />
-              <h3 className="text-xl font-bold mb-3 text-white">Smart Routing</h3>
+              <Globe className="w-10 h-10 text-white mb-6" />
+              <h3 className="text-xl font-bold mb-3 text-white">Model-Agnostic LLMs</h3>
               <p className="text-gray-400 leading-relaxed">
-                The <code className="text-white">.say()</code> method automatically detects user intent. Questions route to memory recall,
-                statements route to conversation. No manual routing needed.
+                Bring any OpenAI or Gemini chat model with your own API key. We validate providers/models, never store your key, and route calls through secure BullMQ workers.
+              </p>
+            </div>
+            <div className="bg-[#0a0a0a] border border-white/10 p-8 rounded-lg hover:border-white/20 transition-colors">
+              <Brain className="w-10 h-10 text-white mb-6" />
+              <h3 className="text-xl font-bold mb-3 text-white">Smart Routing (.say)</h3>
+              <p className="text-gray-400 leading-relaxed">
+                The <code className="text-white">.say()</code> method auto-detects intent. Questions route to retrieval, statements route to conversation—no manual branching.
               </p>
             </div>
             <div className="bg-[#0a0a0a] border border-white/10 p-8 rounded-lg hover:border-white/20 transition-colors">
               <Zap className="w-10 h-10 text-white mb-6" />
               <h3 className="text-xl font-bold mb-3 text-white">Automatic Extraction</h3>
               <p className="text-gray-400 leading-relaxed">
-                Memories are extracted automatically in the background. Facts, preferences, and entities are stored
-                without manual intervention.
+                Memories are extracted asynchronously. Facts, preferences, and entities flow into PostgreSQL + Pinecone without manual tagging.
               </p>
             </div>
             <div className="bg-[#0a0a0a] border border-white/10 p-8 rounded-lg hover:border-white/20 transition-colors">
               <Database className="w-10 h-10 text-white mb-6" />
               <h3 className="text-xl font-bold mb-3 text-white">Infinite Context</h3>
               <p className="text-gray-400 leading-relaxed">
-                The <code className="text-white">.ask()</code> method retrieves relevant memories from Pinecone, giving you
-                unlimited context beyond token limits.
+                The <code className="text-white">.ask()</code> method retrieves top memories from Pinecone, giving you context far beyond token limits.
               </p>
             </div>
             <div className="bg-[#0a0a0a] border border-white/10 p-8 rounded-lg hover:border-white/20 transition-colors">
               <Activity className="w-10 h-10 text-white mb-6" />
-              <h3 className="text-xl font-bold mb-3 text-white">Conversation Management</h3>
+              <h3 className="text-xl font-bold mb-3 text-white">Background Jobs & Logging</h3>
               <p className="text-gray-400 leading-relaxed">
-                Multiple conversations per user. Each conversation maintains its own memory graph and summary.
-                Switch between projects seamlessly.
+                BullMQ workers handle extraction, summaries, and request logging. Track API usage via <code className="text-white">api_requests</code> and <code className="text-white">retrieval_logs</code>.
               </p>
             </div>
             <div className="md:col-span-2 bg-[#0a0a0a] border border-white/10 p-8 rounded-lg hover:border-white/20 transition-colors">
               <Layers className="w-10 h-10 text-white mb-6" />
-              <h3 className="text-xl font-bold mb-3 text-white">Three Simple Methods</h3>
+              <h3 className="text-xl font-bold mb-3 text-white">Dashboard + SDK</h3>
               <p className="text-gray-400 leading-relaxed">
-                <code className="text-white">.say()</code> for smart routing, <code className="text-white">.chat()</code> for conversations,
-                <code className="text-white">.ask()</code> for memory recall. That's it. No complex setup, no manual memory management.
+                Ship fast with the project dashboard, developer portal, and three SDK methods: <code className="text-white">.say()</code>, <code className="text-white">.chat()</code>, <code className="text-white">.ask()</code>.
               </p>
             </div>
           </div>
@@ -294,7 +323,7 @@ export default function LandingPage() {
                   { title: "Use .say()", desc: "Smart routing handles everything. Questions → memory, statements → chat." },
                 ].map((step, i) => (
                   <div key={i} className="flex gap-4">
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#111] border border-white/10 flex items-center justify-center font-mono text-sm">
+                    <div className="shrink-0 w-8 h-8 rounded-full bg-[#111] border border-white/10 flex items-center justify-center font-mono text-sm">
                       {i + 1}
                     </div>
                     <div>
@@ -308,72 +337,40 @@ export default function LandingPage() {
 
             <div className="bg-[#0a0a0a] border border-white/10 rounded-lg p-6 font-mono text-xs md:text-sm text-gray-400">
               <div className="flex gap-4 mb-6 border-b border-white/5 pb-4">
-                <div className="text-white border-b border-white px-2 pb-4 -mb-4.5">app.js</div>
+                <div className="text-white border-b border-white px-2 pb-4 -mb-4.5">server.js</div>
               </div>
               <pre className="overflow-x-auto">
-                {`import { NormalMemory } from 'normal-memory';
+{`import express from 'express';
+import { NormalMemory } from 'normal-memory';
+
+const app = express();
+app.use(express.json());
 
 const memory = new NormalMemory({
-  apiKey: 'sk_...',
-  conversationId: '...',
+  apiKey: process.env.NORMAL_MEMORY_KEY,
+  conversationId: process.env.CONVERSATION_ID,
+  baseUrl: process.env.NORMAL_MEMORY_URL,
+  llmProvider: process.env.LLM_PROVIDER,
+  llmApiKey: process.env.LLM_API_KEY,
+  llmModel: process.env.LLM_MODEL,
 });
 
-// Smart routing - handles everything
-await memory.say("I'm Alex, I'm vegan");
+app.post('/chat', async (req, res) => {
+  const reply = await memory.chat(req.body.message);
+  res.json({ reply });
+});
 
-// Memory recall - infinite context
-const answer = await memory.ask("What's my diet?");
-// → "You're vegan, Alex."
+app.post('/ask', async (req, res) => {
+  const answer = await memory.ask(req.body.question);
+  res.json({ answer });
+});
 
-// Direct conversation
-const reply = await memory.chat("How are you?");
-// → Immediate LLM response`}
+app.listen(4000, () => console.log('SDK test server running on port 4000'));`}
               </pre>
             </div>
           </div>
         </div>
       </section>
-
-      <section className="py-24 px-6 bg-[#0a0a0a] border-y border-white/10">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for Production</h2>
-            <p className="text-gray-400">Real-world applications with persistent memory and smart routing.</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: <Globe className="w-6 h-6" />,
-                title: "AI Assistants",
-                desc: "Remember user preferences, past conversations, and context across sessions. Smart routing handles questions and statements automatically.",
-              },
-              {
-                icon: <Shield className="w-6 h-6" />,
-                title: "Customer Support",
-                desc: "Recall user history, preferences, and past issues. The .ask() method provides accurate memory-based answers instantly.",
-              },
-              {
-                icon: <Activity className="w-6 h-6" />,
-                title: "Conversational Apps",
-                desc: "Multiple conversations per user. Each maintains its own memory graph. Switch between projects seamlessly with conversation IDs.",
-              },
-            ].map((useCase, i) => (
-              <div
-                key={i}
-                className="bg-[#050505] border border-white/10 p-8 rounded-lg text-left hover:border-white/30 transition-all"
-              >
-                <div className="w-12 h-12 bg-[#111] rounded-lg flex items-center justify-center mb-6 text-white">
-                  {useCase.icon}
-                </div>
-                <h3 className="text-lg font-bold text-white mb-3">{useCase.title}</h3>
-                <p className="text-gray-400 text-sm leading-relaxed">{useCase.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
 
       {/* Final CTA */}
       <section className="py-32 px-6 relative overflow-hidden border-t border-white/10">

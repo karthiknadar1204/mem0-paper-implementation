@@ -143,8 +143,8 @@ app.listen(PORT, async () => {
   console.log(`Redis URL: ${process.env.REDIS_URL ? 'Set' : 'NOT SET - Workers may not work!'}`);
   
   try {
-    startMemoryProcessor();
-    startSummaryProcessor();
+  startMemoryProcessor();
+  startSummaryProcessor();
     startLoggingProcessor();
     console.log('All background workers started');
   } catch (error) {
@@ -152,7 +152,7 @@ app.listen(PORT, async () => {
   }
   
   try {
-    await setupPeriodicSummaryJobs();
+  await setupPeriodicSummaryJobs();
   } catch (error) {
     console.error('Error setting up periodic jobs:', error);
   }

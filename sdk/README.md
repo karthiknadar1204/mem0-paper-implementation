@@ -24,9 +24,8 @@ const memory = new NormalMemory({
   apiKey: 'sk_4f8a9c2d_...',              // Required: Your API key
   conversationId: 'your-conversation-id',  // Required: Conversation ID
   baseUrl: 'https://mem0-paper-implementation-production.up.railway.app',    // Required
-  model: 'gpt-4o-mini',                   // Optional: default model
-  llmProvider: 'openai',                  // Optional: 'openai' | 'gemini'
-  llmApiKey: process.env.OPENAI_KEY,      // Optional: Bring-your-own LLM key
+  llmProvider: 'openai',                  // Required: 'openai' | 'gemini'
+  llmApiKey: process.env.OPENAI_KEY,      // Required: Bring-your-own LLM key
   llmModel: 'gpt-4o-mini',                // Optional: override model per provider
 });
 
@@ -91,13 +90,12 @@ const answer = await memory.ask("What do you know about me?");
 
 ```javascript
 const memory = new NormalMemory({
-  apiKey: 'sk_...',              // Required: Your API key from dashboard
-  conversationId: '...',         // Required: Conversation ID (get from GET /conversations)
-  baseUrl: 'https://mem0-paper-implementation-production.up.railway.app',  // Required: url
-  model: 'gpt-4o-mini',          // Optional: Default OpenAI model
-  llmProvider: 'gemini',         // Optional: Choose 'openai' (default) or 'gemini'
-  llmApiKey: process.env.GEMINI_KEY, // Optional: Bring-your-own LLM API key
-  llmModel: 'gemini-1.5-pro',    // Optional: Provider-specific model
+  apiKey: 'sk_backend_key',                 // Required: Normal Memory API key
+  conversationId: 'conversation-id',        // Required: Conversation ID (GET /conversations)
+  baseUrl: 'https://your-backend-url.com',  // Required: Backend URL
+  llmProvider: 'openai',                    // Required: 'openai' | 'gemini'
+  llmApiKey: process.env.OPENAI_KEY,        // Required: Bring-your-own LLM key
+  llmModel: 'gpt-4o-mini',                  // Optional: provider-specific override
 });
 
 ### Bring Your Own LLM
@@ -108,16 +106,22 @@ You can route chat/ask responses through your own OpenAI or Gemini account:
 const memory = new NormalMemory({
   apiKey: 'sk_backend_key',         // Normal Memory API key
   conversationId: 'conversation-id',
-  llmProvider: 'gemini',            // 'openai' (default) or 'gemini'
-  llmApiKey: process.env.GEMINI_KEY,// Required when using Gemini
+  llmProvider: 'gemini',            // Required: 'openai' or 'gemini'
+  llmApiKey: process.env.GEMINI_KEY,// Required: Bring-your-own key
   llmModel: 'gemini-1.5-flash',     // Optional provider-specific model
 });
 ```
 
-- If you omit `llmProvider`/`llmApiKey`, the backend uses its default OpenAI key (previous behavior).
+- Every request must include `llmProvider` and `llmApiKey`; the backend never falls back to shared keys.
 - Gemini requests require `llmApiKey` because we never store user LLM keys.
 - Embeddings and background memory processing still use the backend's managed keys.
 ```
+
+### Supported Providers & Models
+
+- **OpenAI** — Works with every chat/completions-capable OpenAI model (e.g. `gpt-4o`, `gpt-4o-mini`, `gpt-4.1`, `o4-mini`, realtime previews, etc.). Set `llmProvider: 'openai'` and pass the exact model string; the SDK simply forwards it and surfaces provider errors if a model isn’t accessible to your key.
+- **Google Gemini** — Use `llmProvider: 'gemini'` with models such as `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.0-flash-001`, or `gemini-2.0-flash-lite-001`. We validate the model name before sending the request so you get fast feedback on typos.
+- **Key handling** — Your OpenAI/Gemini keys are only used per request and never persisted; embeddings, retrieval, and background memory jobs continue to run on Normal Memory-managed keys.
 
 ## Backend Requirements
 
@@ -229,9 +233,8 @@ Creates a new NormalMemory instance.
 - `config.apiKey` (string, required): Your Normal Memory API key
 - `config.conversationId` (string, required): Conversation ID
 - `config.baseUrl` (string, optional): Backend URL
-- `config.model` (string, optional): Default OpenAI model (fallback)
-- `config.llmProvider` (string, optional): `'openai'` (default) or `'gemini'`
-- `config.llmApiKey` (string, optional): BYO LLM API key (required for Gemini)
+- `config.llmProvider` (string, required): `'openai'` or `'gemini'`
+- `config.llmApiKey` (string, required): BYO LLM API key (never stored server-side)
 - `config.llmModel` (string, optional): Provider-specific model override
 
 ### Methods

@@ -1,11 +1,36 @@
 import OpenAI from 'openai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import defaultOpenAI from './openai.js';
+import { GoogleGenAI } from '@google/genai';
 
 const SUPPORTED_PROVIDERS = ['openai', 'gemini'];
+
 const DEFAULT_MODELS = {
   openai: 'gpt-4o-mini',
-  gemini: 'gemini-1.5-pro',
+  gemini: 'gemini-2.0-flash',
+};
+
+const SUPPORTED_GEMINI_MODELS = [
+  'gemini-2.5-pro',
+  'gemini-3-pro-preview',
+  'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+  'gemini-2.0-flash-001',
+  'gemini-2.0-flash-exp',
+  'gemini-2.0-flash-lite',
+  'gemini-2.0-flash-lite-001',
+];
+
+const normalizeGeminiModel = (model) => {
+  const resolved = (model && typeof model === 'string') ? model.trim().toLowerCase() : DEFAULT_MODELS.gemini;
+
+  if (!SUPPORTED_GEMINI_MODELS.includes(resolved)) {
+    throw new LLMError(
+      `Invalid Gemini model "${model}". Supported models: ${SUPPORTED_GEMINI_MODELS.join(', ')}.`,
+      400
+    );
+  }
+
+  return resolved;
 };
 
 export class LLMError extends Error {
@@ -19,11 +44,16 @@ export class LLMError extends Error {
 
 const normalizeProvider = (provider) => {
   if (!provider || typeof provider !== 'string') {
-    return 'openai';
+    throw new LLMError('llmProvider is required and must be either "openai" or "gemini".', 400);
   }
 
-  const normalized = provider.toLowerCase();
-  return SUPPORTED_PROVIDERS.includes(normalized) ? normalized : 'openai';
+  const normalized = provider.trim().toLowerCase();
+
+  if (!SUPPORTED_PROVIDERS.includes(normalized)) {
+    throw new LLMError('Invalid llmProvider. Supported values are "openai" or "gemini".', 400);
+  }
+
+  return normalized;
 };
 
 export const resolveLLMRequest = (body = {}) => {
@@ -33,29 +63,29 @@ export const resolveLLMRequest = (body = {}) => {
 
   return {
     provider,
-    model: model && typeof model === 'string' ? model : undefined,
-    apiKey: apiKey && apiKey.length > 0 ? apiKey : undefined,
+    model: (model && typeof model === 'string') ? model : undefined,
+    apiKey: (apiKey && apiKey.length > 0) ? apiKey : undefined,
   };
 };
 
 const createClient = (provider, apiKey) => {
+  if (!apiKey) {
+    const providerName = provider === 'gemini' ? 'Gemini' : 'OpenAI';
+    throw new LLMError(`${providerName} API key is required for this request.`, 400);
+  }
+
   if (provider === 'gemini') {
-    if (!apiKey) {
-      throw new LLMError('Gemini API key is required when using the Gemini provider.', 400);
-    }
-    return new GoogleGenerativeAI(apiKey);
+    return new GoogleGenAI({ apiKey, apiVersion: 'v1beta' });
   }
 
-  if (apiKey) {
-    return new OpenAI({ apiKey });
-  }
-
-  return defaultOpenAI;
+  return new OpenAI({ apiKey });
 };
 
 export const buildLLMContext = ({ provider, apiKey, model }) => {
   const normalizedProvider = normalizeProvider(provider);
-  const resolvedModel = model || DEFAULT_MODELS[normalizedProvider];
+  const resolvedModel = normalizedProvider === 'gemini'
+    ? normalizeGeminiModel(model)
+    : (model || DEFAULT_MODELS[normalizedProvider]);
   const client = createClient(normalizedProvider, apiKey);
 
   return {
@@ -65,11 +95,13 @@ export const buildLLMContext = ({ provider, apiKey, model }) => {
   };
 };
 
-const mapMessagesToGemini = (messages) => {
-  return messages.map((msg) => ({
-    role: msg.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: msg.content }],
-  }));
+const mapMessagesToGeminiContents = (messages) => {
+  return messages
+    .filter(msg => msg.role !== 'system')
+    .map((msg) => ({
+      role: msg.role === 'assistant' ? 'model' : 'user',
+      parts: [{ text: msg.content }],
+    }));
 };
 
 const runOpenAICompletion = async ({ context, messages, temperature, maxTokens, responseFormat }) => {
@@ -84,7 +116,14 @@ const runOpenAICompletion = async ({ context, messages, temperature, maxTokens, 
 
     return completion.choices[0].message.content.trim();
   } catch (error) {
-    if (error?.status === 401 || error?.status === 403) {
+    const message = (error?.message || '').toLowerCase();
+    const isAuthError =
+      error?.status === 401 ||
+      error?.status === 403 ||
+      message.includes('authentication') ||
+      message.includes('api key');
+
+    if (isAuthError) {
       throw new LLMError('Invalid OpenAI API key. Please double-check your key and try again.', 401, error);
     }
 
@@ -94,27 +133,29 @@ const runOpenAICompletion = async ({ context, messages, temperature, maxTokens, 
 
 const runGeminiCompletion = async ({ context, messages, temperature, maxTokens, responseFormat }) => {
   try {
-    const model = context.client.getGenerativeModel({ model: context.model });
-    const generationConfig = {};
+    // Extract system message if present
+    const systemMessage = messages.find(msg => msg.role === 'system');
+    const chatMessages = messages.filter(msg => msg.role !== 'system');
+    
+    // Convert messages to Gemini format
+    const contents = mapMessagesToGeminiContents(chatMessages);
+    
+    // Build config object with conditional properties
+    const config = {
+      ...(typeof temperature === 'number' && { temperature }),
+      ...(typeof maxTokens === 'number' && { maxOutputTokens: maxTokens }),
+      ...(responseFormat?.type === 'json_object' && { responseMimeType: 'application/json' }),
+    };
 
-    if (typeof temperature === 'number') {
-      generationConfig.temperature = temperature;
-    }
-
-    if (typeof maxTokens === 'number') {
-      generationConfig.maxOutputTokens = maxTokens;
-    }
-
-    if (responseFormat?.type === 'json_object') {
-      generationConfig.responseMimeType = 'application/json';
-    }
-
-    const result = await model.generateContent({
-      contents: mapMessagesToGemini(messages),
-      ...(Object.keys(generationConfig).length > 0 ? { generationConfig } : {}),
+    // Use the new API syntax: ai.models.generateContent({ model, contents, config })
+    const response = await context.client.models.generateContent({
+      model: context.model,
+      contents: contents.length > 0 ? contents : [{ role: 'user', parts: [{ text: '' }] }],
+      ...(systemMessage && { systemInstruction: systemMessage.content }),
+      ...(Object.keys(config).length > 0 && { config }),
     });
 
-    const text = result?.response?.text?.();
+    const text = response?.text;
 
     if (!text) {
       throw new LLMError('Gemini returned an empty response.', 500);
@@ -123,11 +164,14 @@ const runGeminiCompletion = async ({ context, messages, temperature, maxTokens, 
     return text.trim();
   } catch (error) {
     const message = error?.message || '';
-    if (message.toLowerCase().includes('api key') || error?.status === 401 || error?.status === 403) {
+    const isAuthError = message.toLowerCase().includes('api key') || error?.status === 401 || error?.status === 403;
+    
+    if (isAuthError) {
       throw new LLMError('Invalid Gemini API key. Please double-check your key and try again.', 401, error);
     }
 
-    throw new LLMError('Gemini request failed.', 500, error);
+    const errorMessage = message ? `Gemini request failed: ${message}` : 'Gemini request failed.';
+    throw new LLMError(errorMessage, 500, error);
   }
 };
 
