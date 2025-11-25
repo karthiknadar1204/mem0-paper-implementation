@@ -8,9 +8,9 @@ export class NormalMemory {
       apiKey,
       conversationId,
       baseUrl = 'https://mem0-paper-implementation-production.up.railway.app',
-      llmProvider = 'openai',
-      llmApiKey = null,
-      llmModel = null,
+      llmProvider,
+      llmApiKey,
+      llmModel,
       smartRouting = true,
     } = config;
 
@@ -30,9 +30,14 @@ export class NormalMemory {
     this.baseUrl = baseUrl.replace(/\/$/, '');
     this.smartRouting = smartRouting;
     this.conversationId = conversationId;
-    this.llmProvider = typeof llmProvider === 'string' ? llmProvider.toLowerCase() : 'openai';
+    this.llmProvider = typeof llmProvider === 'string' ? llmProvider.trim().toLowerCase() : '';
     this.llmApiKey = typeof llmApiKey === 'string' ? llmApiKey.trim() : '';
-    this.llmModel = llmModel || model;
+    this.llmModel = typeof llmModel === 'string' && llmModel.trim().length > 0 ? llmModel.trim() : undefined;
+
+    const supportedProviders = ['openai', 'gemini'];
+    if (!supportedProviders.includes(this.llmProvider)) {
+      throw new Error('llmProvider must be either "openai" or "gemini".');
+    }
 
     if (!this.llmApiKey) {
       throw new Error('llmApiKey is required. Please provide your own OpenAI or Gemini key.');

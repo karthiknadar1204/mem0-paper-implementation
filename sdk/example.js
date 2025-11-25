@@ -2,7 +2,7 @@
 
 import { NormalMemory } from './src/index.js';
 
-const userLlmKey = process.env.OPENAI_KEY || 'sk_your_openai_key_here';
+const userLlmKey = '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';
 
 async function example() {
   try {
@@ -20,7 +20,7 @@ async function example() {
       baseUrl: 'http://localhost:4000', // Required: Your backend URL
       llmProvider: 'openai', // Required: 'openai' or 'gemini'
       llmApiKey: userLlmKey, // REQUIRED: Your own OpenAI/Gemini key
-      llmModel: 'gpt-4o-mini', // Required: provider-specific override
+      llmModel: 'gpt-4.1-mini', // Required: provider-specific override  
     });
 
     console.log('=== Using conversation:', conversationId, '===');
