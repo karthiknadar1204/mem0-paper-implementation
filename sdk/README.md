@@ -90,13 +90,12 @@ const answer = await memory.ask("What do you know about me?");
 
 ```javascript
 const memory = new NormalMemory({
-  apiKey: 'sk_...',              // Required: Your API key from dashboard
-  conversationId: '...',         // Required: Conversation ID (get from GET /conversations)
-  baseUrl: 'https://mem0-paper-implementation-production.up.railway.app',  // Required: url
-  model: 'gpt-4o-mini',          // Optional: Default OpenAI model
-  llmProvider: 'gemini',         // Required: Choose 'openai' or 'gemini'
-  llmApiKey: process.env.GEMINI_KEY, // Required: Bring-your-own LLM API key
-  llmModel: 'gemini-1.5-pro',    // Optional: Provider-specific model
+  apiKey: 'sk_backend_key',                 // Required: Normal Memory API key
+  conversationId: 'conversation-id',        // Required: Conversation ID (GET /conversations)
+  baseUrl: 'https://your-backend-url.com',  // Required: Backend URL
+  llmProvider: 'openai',                    // Required: 'openai' | 'gemini'
+  llmApiKey: process.env.OPENAI_KEY,        // Required: Bring-your-own LLM key
+  llmModel: 'gpt-4o-mini',                  // Optional: provider-specific override
 });
 
 ### Bring Your Own LLM
@@ -117,6 +116,12 @@ const memory = new NormalMemory({
 - Gemini requests require `llmApiKey` because we never store user LLM keys.
 - Embeddings and background memory processing still use the backend's managed keys.
 ```
+
+### Supported Providers & Models
+
+- **OpenAI** — Works with every chat/completions-capable OpenAI model (e.g. `gpt-4o`, `gpt-4o-mini`, `gpt-4.1`, `o4-mini`, realtime previews, etc.). Set `llmProvider: 'openai'` and pass the exact model string; the SDK simply forwards it and surfaces provider errors if a model isn’t accessible to your key.
+- **Google Gemini** — Use `llmProvider: 'gemini'` with models such as `gemini-2.5-pro`, `gemini-2.5-flash`, `gemini-2.0-flash-001`, or `gemini-2.0-flash-lite-001`. We validate the model name before sending the request so you get fast feedback on typos.
+- **Key handling** — Your OpenAI/Gemini keys are only used per request and never persisted; embeddings, retrieval, and background memory jobs continue to run on Normal Memory-managed keys.
 
 ## Backend Requirements
 
