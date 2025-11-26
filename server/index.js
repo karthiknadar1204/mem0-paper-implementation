@@ -35,27 +35,11 @@ dotenv.config();
 
 const app = express();
 
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  'https://mem0-paper-implementation-production.up.railway.app',
-  'https://selfless-fulfillment-production.up.railway.app',
-  '*'
-];
-
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl) - but don't use wildcard
-    if (!origin) {
-      return callback(null, true);
-    }
-    if (allowedOrigins.includes(origin)) {
-      // Return the specific origin, not true, to avoid wildcard issues with credentials
-      return callback(null, origin);
-    } else {
-      console.error('CORS blocked origin:', origin);
-      return callback(new Error('CORS policy: Origin ' + origin + ' not allowed'));
-    }
+    // Allow requests with or without explicit Origin header by reflecting the caller.
+    if (!origin) return callback(null, true);
+    return callback(null, origin);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
