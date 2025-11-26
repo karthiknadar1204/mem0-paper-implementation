@@ -13,12 +13,11 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-// Health check endpoint
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'sdk-test-server' });
 });
 
-// POST /say - Auto-routing method (routes to chat or ask based on content)
 app.post('/say', async (req, res) => {
   try {
     const { message } = req.body;
@@ -47,7 +46,6 @@ app.post('/say', async (req, res) => {
   }
 });
 
-// POST /chat - Normal conversation with immediate LLM response
 app.post('/chat', async (req, res) => {
   try {
     const { message } = req.body;
@@ -76,7 +74,6 @@ app.post('/chat', async (req, res) => {
   }
 });
 
-// POST /ask - Ask questions using long-term memory
 app.post('/ask', async (req, res) => {
   try {
     const { question } = req.body;
