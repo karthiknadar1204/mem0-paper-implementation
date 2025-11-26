@@ -9,10 +9,35 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+app.use(express.json());
 app.use(bodyParser.json());
 app.use(cookieParser());
 
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:5008',
+  'https://mem0-paper-implementation-production.up.railway.app'
+];
+
+const allowSubdomain = (origin = '', domainSuffix = '') =>
+  origin.toLowerCase().endsWith(domainSuffix.toLowerCase());
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    if (
+      allowedOrigins.includes(origin) ||
+      allowSubdomain(origin, '.ngrok-free.app') ||
+      allowSubdomain(origin, '.ngrok.io')
+    ) {
+      return callback(null, true);
+    }
+    return callback(new Error(`Origin ${origin} not allowed by CORS`));
+  },
+  credentials: true,
+  optionsSuccessStatus: 200
+}));
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'sdk-test-server' });
@@ -23,8 +48,8 @@ app.post('/say', async (req, res) => {
     const { message } = req.body;
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
-      return res.status(400).json({ 
-        error: 'message is required and must be a non-empty string' 
+      return res.status(400).json({
+        error: 'message is required and must be a non-empty string'
       });
     }
 
@@ -39,9 +64,9 @@ app.post('/say', async (req, res) => {
     });
   } catch (error) {
     console.error('Error in /say endpoint:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Internal server error',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -51,8 +76,8 @@ app.post('/chat', async (req, res) => {
     const { message } = req.body;
 
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
-      return res.status(400).json({ 
-        error: 'message is required and must be a non-empty string' 
+      return res.status(400).json({
+        error: 'message is required and must be a non-empty string'
       });
     }
 
@@ -67,9 +92,9 @@ app.post('/chat', async (req, res) => {
     });
   } catch (error) {
     console.error('Error in /chat endpoint:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Internal server error',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -79,8 +104,8 @@ app.post('/ask', async (req, res) => {
     const { question } = req.body;
 
     if (!question || typeof question !== 'string' || question.trim().length === 0) {
-      return res.status(400).json({ 
-        error: 'question is required and must be a non-empty string' 
+      return res.status(400).json({
+        error: 'question is required and must be a non-empty string'
       });
     }
 
@@ -95,9 +120,9 @@ app.post('/ask', async (req, res) => {
     });
   } catch (error) {
     console.error('Error in /ask endpoint:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Internal server error',
-      message: error.message 
+      message: error.message
     });
   }
 });

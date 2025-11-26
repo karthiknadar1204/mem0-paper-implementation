@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-const API_URL = 'http://localhost:5008';
+const API_URL = 'https://mem0-paper-implementation-production.up.railway.app';
 
 export default function Home() {
   const [message, setMessage] = useState('');
@@ -17,7 +17,6 @@ export default function Home() {
     setMessage('');
     setLoading(true);
 
-    // Add user message to chat
     setMessages(prev => [...prev, { role: 'user', content: userMessage, method }]);
 
     try {
