@@ -1,4 +1,7 @@
 import { NormalMemory } from 'normal-memory';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const userLlmKey = process.env.OPENAI_KEY;
 
