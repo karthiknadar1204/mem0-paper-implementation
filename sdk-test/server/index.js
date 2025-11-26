@@ -17,7 +17,8 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://localhost:5008',
-  'https://mem0-paper-implementation-production.up.railway.app'
+  'https://mem0-paper-implementation-production.up.railway.app',
+  'https://9d87e78f5b46.ngrok-free.app'
 ];
 
 const allowSubdomain = (origin = '', domainSuffix = '') =>
