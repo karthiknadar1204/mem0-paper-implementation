@@ -1,19 +1,15 @@
-import openai from '../utils/openai.js';
 import { index } from '../utils/pinecone.js';
 import { db } from '../config/db.js';
 import { memories } from '../config/schema.js';
 import { buildToolCallingPrompt } from '../utils/prompts.js';
+import { embedText, runChatCompletionRaw } from '../utils/llm-client.js';
 import { eq } from 'drizzle-orm';
 
 const SIMILARITY_THRESHOLD = 0.5;
 
-export const processFact = async (fact, conversationId) => {
+export const processFact = async (fact, conversationId, { llm, embeddingsApiKey }) => {
   try {
-    const embeddingResponse = await openai.embeddings.create({
-      model: 'text-embedding-3-small',
-      input: fact,
-    });
-    const embedding = embeddingResponse.data[0].embedding;
+    const embedding = await embedText(fact, embeddingsApiKey);
 
     const conversationMemories = await db
       .select({ id: memories.id })
@@ -21,7 +17,7 @@ export const processFact = async (fact, conversationId) => {
       .where(eq(memories.conversationId, conversationId));
 
     const similarMemories = [];
-    
+
     if (conversationMemories.length > 0) {
       try {
         const queryResponse = await index.query({
@@ -41,7 +37,7 @@ export const processFact = async (fact, conversationId) => {
                 .from(memories)
                 .where(eq(memories.id, match.id))
                 .limit(1);
-              
+
               if (memory && memory.conversationId === conversationId) {
                 similarMemories.push({
                   id: memory.id,
@@ -62,7 +58,7 @@ export const processFact = async (fact, conversationId) => {
 
         if (queryResponse.matches && queryResponse.matches.length > 0) {
           const conversationMemoryIds = new Set(conversationMemories.map(m => m.id));
-          
+
           for (const match of queryResponse.matches) {
             if (match.score >= SIMILARITY_THRESHOLD && conversationMemoryIds.has(match.id)) {
               const [memory] = await db
@@ -70,7 +66,7 @@ export const processFact = async (fact, conversationId) => {
                 .from(memories)
                 .where(eq(memories.id, match.id))
                 .limit(1);
-              
+
               if (memory) {
                 similarMemories.push({
                   id: memory.id,
@@ -84,7 +80,7 @@ export const processFact = async (fact, conversationId) => {
       }
     }
 
-    const decision = await decideAction(fact, similarMemories);
+    const decision = await decideAction(fact, similarMemories, llm);
 
     return await executeAction(decision, fact, conversationId, embedding);
   } catch (error) {
@@ -93,12 +89,12 @@ export const processFact = async (fact, conversationId) => {
   }
 };
 
-const decideAction = async (fact, similarMemories) => {
+const decideAction = async (fact, similarMemories, llm) => {
   try {
     const prompt = buildToolCallingPrompt(fact, similarMemories);
 
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const message = await runChatCompletionRaw({
+      context: llm,
       messages: [
         {
           role: 'system',
@@ -134,10 +130,10 @@ const decideAction = async (fact, similarMemories) => {
           },
         },
       ],
-      tool_choice: { type: 'function', function: { name: 'decide_memory_action' } },
+      toolChoice: { type: 'function', function: { name: 'decide_memory_action' } },
     });
 
-    const toolCall = response.choices[0].message.tool_calls?.[0];
+    const toolCall = message?.tool_calls?.[0];
     if (!toolCall || toolCall.function.name !== 'decide_memory_action') {
       console.warn('No tool call returned, defaulting to ADD');
       return { action: 'ADD', memoryId: null };
@@ -233,4 +229,3 @@ const executeAction = async (decision, fact, conversationId, embedding) => {
       throw new Error(`Unknown action: ${action}`);
   }
 };
-

@@ -14,7 +14,7 @@ export default function Home() {
     if (!message.trim() || loading) return;
 
     const userMessage = message.trim();
-    setMessage('');
+    setMessage('');   
     setLoading(true);
 
     // Add user message to chat

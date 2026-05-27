@@ -1,0 +1,16 @@
+node_modules/
+.env
+.env.*
+!.env.example
+
+# Cursor / SpecStory session logs (may contain secrets pasted into chat)
+.specstory/
+.cursorindexingignore
+
+# Large binary artifacts
+*.mp4
+*.mov
+*.pdf
+
+# OS
+.DS_Store

@@ -1,18 +1,14 @@
-import openai from '../utils/openai.js';
 import { index } from '../utils/pinecone.js';
 import { db } from '../config/db.js';
 import { memories } from '../config/schema.js';
+import { embedText } from '../utils/llm-client.js';
 import { eq } from 'drizzle-orm';
 
 const TOP_K = 25;
 
-export const retrieveRelevantMemories = async (question, conversationId) => {
+export const retrieveRelevantMemories = async (question, conversationId, { embeddingsApiKey }) => {
     try {
-        const embeddingResponse = await openai.embeddings.create({
-            model: 'text-embedding-3-small',
-            input: question,
-        });
-        const questionEmbedding = embeddingResponse.data[0].embedding;
+        const questionEmbedding = await embedText(question, embeddingsApiKey);
 
         const conversationMemories = await db
             .select({ id: memories.id })
@@ -85,4 +81,3 @@ export const retrieveRelevantMemories = async (question, conversationId) => {
         throw error;
     }
 };
-

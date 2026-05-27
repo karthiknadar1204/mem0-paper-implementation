@@ -1,6 +1,6 @@
 import { retrieveRelevantMemories } from '../services/retrieval.js';
 import { buildAnswerPrompt } from '../utils/prompts.js';
-import { buildLLMContext, resolveLLMRequest, runChatCompletion, LLMError } from '../utils/llm-client.js';
+import { buildLLMContext, resolveLLMRequest, resolveEmbeddingsApiKey, runChatCompletion, LLMError } from '../utils/llm-client.js';
 import { loggingQueue } from '../config/queue.js';
 
 export const askRoute = async (req, res) => {
@@ -16,13 +16,16 @@ export const askRoute = async (req, res) => {
       return res.status(400).json({ error: 'question is required and must be a non-empty string' });
     }
 
+    const llmParams = resolveLLMRequest(req.body);
+    const embeddingsApiKey = resolveEmbeddingsApiKey(req.body);
+
     const retrievalStart = Date.now();
-    const relevantMemories = await retrieveRelevantMemories(question, conversationId);
+    const relevantMemories = await retrieveRelevantMemories(question, conversationId, { embeddingsApiKey });
     const retrievalLatency = Date.now() - retrievalStart;
 
     const prompt = buildAnswerPrompt(relevantMemories, question);
 
-    const llmContext = buildLLMContext(resolveLLMRequest(req.body));
+    const llmContext = buildLLMContext(llmParams);
     const answer = await runChatCompletion({
       context: llmContext,
       messages: [
