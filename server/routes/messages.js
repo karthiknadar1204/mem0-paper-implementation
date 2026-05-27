@@ -1,6 +1,7 @@
 import { db } from '../config/db.js';
 import { messages } from '../config/schema.js';
 import { memoryProcessQueue } from '../config/queue.js';
+import { resolveLLMRequest, resolveEmbeddingsApiKey, LLMError } from '../utils/llm-client.js';
 
 export const createMessageRoute = async (req, res) => {
   try {
@@ -9,6 +10,18 @@ export const createMessageRoute = async (req, res) => {
 
     if (!role || !content) {
       return res.status(400).json({ error: 'role and content are required' });
+    }
+
+    let llmParams;
+    let embeddingsApiKey;
+    try {
+      llmParams = resolveLLMRequest(req.body);
+      embeddingsApiKey = resolveEmbeddingsApiKey(req.body);
+    } catch (error) {
+      if (error instanceof LLMError) {
+        return res.status(error.statusCode).json({ error: error.message });
+      }
+      throw error;
     }
 
     const [message] = await db
@@ -23,6 +36,8 @@ export const createMessageRoute = async (req, res) => {
     await memoryProcessQueue.add('process', {
       conversationId,
       messageId: message.id,
+      llmParams,
+      embeddingsApiKey,
     });
 
     return res.status(202).json({
@@ -34,4 +49,3 @@ export const createMessageRoute = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
-

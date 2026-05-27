@@ -41,7 +41,7 @@ export const generateSummary = async (conversationId) => {
         .from(summaries)
         .where(eq(summaries.conversationId, conversationId))
         .limit(1);
-      
+
       if (existing.length > 0) {
         await db
           .update(summaries)
@@ -85,7 +85,7 @@ export const generateSummary = async (conversationId) => {
       .from(summaries)
       .where(eq(summaries.conversationId, conversationId))
       .limit(1);
-    
+
     if (existing.length > 0) {
       await db
         .update(summaries)
@@ -108,4 +108,3 @@ export const generateSummary = async (conversationId) => {
     throw error;
   }
 };
-

@@ -1,13 +1,13 @@
-import openai from '../utils/openai.js';
 import { buildExtractionPrompt } from '../utils/prompts.js';
+import { runChatCompletion } from '../utils/llm-client.js';
 
-export const extractFacts = async (summary, recentMessages, previousMessage, newMessage) => {
+export const extractFacts = async (llm, summary, recentMessages, previousMessage, newMessage) => {
   try {
     const prompt = buildExtractionPrompt(summary, recentMessages, previousMessage, newMessage);
 
     console.log('Extracting facts with prompt:', prompt);
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const content = await runChatCompletion({
+      context: llm,
       messages: [
         {
           role: 'system',
@@ -19,14 +19,12 @@ export const extractFacts = async (summary, recentMessages, previousMessage, new
         },
       ],
       temperature: 0.2,
-      response_format: { type: 'json_object' },
+      responseFormat: { type: 'json_object' },
     });
 
-    const content = response.choices[0].message.content;
     const parsed = JSON.parse(content);
-    
     const facts = parsed.facts || [];
-    
+
     if (!Array.isArray(facts)) {
       return [];
     }
@@ -37,4 +35,3 @@ export const extractFacts = async (summary, recentMessages, previousMessage, new
     return [];
   }
 };
-

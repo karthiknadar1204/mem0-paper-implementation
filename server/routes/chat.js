@@ -2,7 +2,7 @@ import { db } from '../config/db.js';
 import { messages, summaries } from '../config/schema.js';
 import { memoryProcessQueue, loggingQueue } from '../config/queue.js';
 import { eq, desc } from 'drizzle-orm';
-import { buildLLMContext, resolveLLMRequest, runChatCompletion, LLMError } from '../utils/llm-client.js';
+import { buildLLMContext, resolveLLMRequest, resolveEmbeddingsApiKey, runChatCompletion, LLMError } from '../utils/llm-client.js';
 
 export const chatRoute = async (req, res) => {
   const start = Date.now();
@@ -65,7 +65,9 @@ export const chatRoute = async (req, res) => {
       content: message.trim(),
     });
 
-    const llmContext = buildLLMContext(resolveLLMRequest(req.body));
+    const llmParams = resolveLLMRequest(req.body);
+    const embeddingsApiKey = resolveEmbeddingsApiKey(req.body);
+    const llmContext = buildLLMContext(llmParams);
     const assistantReply = await runChatCompletion({
       context: llmContext,
       messages: [
@@ -91,6 +93,8 @@ export const chatRoute = async (req, res) => {
     memoryProcessQueue.add('memory-process', {
       conversationId,
       messageId: userMessage.id,
+      llmParams,
+      embeddingsApiKey,
     }).catch(error => {
       console.error('Error queueing memory job:', error);
     });

@@ -5,7 +5,8 @@ import { messages, summaries } from '../config/schema.js';
 import { extractFacts } from '../services/extraction.js';
 import { processFact } from '../services/memory-updater.js';
 import { summaryUpdateQueue } from '../config/queue.js';
-import { eq, and, desc } from 'drizzle-orm';
+import { buildLLMContext, LLMError } from '../utils/llm-client.js';
+import { eq, desc } from 'drizzle-orm';
 
 const connection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', {
   maxRetriesPerRequest: null,
@@ -41,11 +42,27 @@ export const startMemoryProcessor = () => {
   const worker = new Worker(
     'memory-process',
     async (job) => {
-      const { conversationId, messageId } = job.data;
+      const { conversationId, messageId, llmParams, embeddingsApiKey } = job.data;
+
+      if (!llmParams || !llmParams.apiKey || !embeddingsApiKey) {
+        console.warn(`Skipping memory job for message ${messageId}: missing user-supplied LLM/embedding key`);
+        return { skipped: true, reason: 'missing_user_keys' };
+      }
+
+      let llm;
+      try {
+        llm = buildLLMContext(llmParams);
+      } catch (error) {
+        if (error instanceof LLMError) {
+          console.warn(`Skipping memory job for message ${messageId}: ${error.message}`);
+          return { skipped: true, reason: 'invalid_llm_params' };
+        }
+        throw error;
+      }
 
       try {
         const context = await fetchContext(conversationId, messageId);
-        
+
         if (!context.newMessage) {
           console.error(`Message ${messageId} not found`);
           return;
@@ -53,6 +70,7 @@ export const startMemoryProcessor = () => {
 
         console.log(`Extracting facts from message: "${context.newMessage.content}"`);
         const facts = await extractFacts(
+          llm,
           context.summary,
           context.recentMessages,
           context.previousMessage,
@@ -69,10 +87,10 @@ export const startMemoryProcessor = () => {
         const results = [];
         let memoriesAdded = 0;
         let memoriesUpdated = 0;
-        
+
         for (const fact of facts) {
           try {
-            const result = await processFact(fact, conversationId);
+            const result = await processFact(fact, conversationId, { llm, embeddingsApiKey });
             results.push(result);
             
             if (result.action === 'ADD') {
@@ -141,6 +159,7 @@ export const startMemoryProcessor = () => {
   console.log('Memory processor worker started');
   return worker;
 };
+
 
 const fetchContext = async (conversationId, messageId) => {
   const [newMessage] = await db

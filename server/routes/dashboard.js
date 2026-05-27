@@ -3,7 +3,7 @@ import { memories, apiRequests, retrievalLogs } from '../config/schema.js';
 import { conversations } from '../config/schema.js';
 import { eq, desc, and, sql, like, or } from 'drizzle-orm';
 import { index } from '../utils/pinecone.js';
-import openai from '../utils/openai.js';
+import { embedText, resolveEmbeddingsApiKey, LLMError } from '../utils/llm-client.js';
 import { memoryProcessQueue } from '../config/queue.js';
 
 // Get all memories for a conversation
@@ -287,7 +287,16 @@ export const addManualMemoryRoute = async (req, res) => {
       return res.status(400).json({ error: 'content is required and must be a non-empty string' });
     }
 
-    // Create memory in database
+    let embeddingsApiKey;
+    try {
+      embeddingsApiKey = resolveEmbeddingsApiKey(req.body);
+    } catch (error) {
+      if (error instanceof LLMError) {
+        return res.status(error.statusCode).json({ error: error.message });
+      }
+      throw error;
+    }
+
     const [newMemory] = await db
       .insert(memories)
       .values({
@@ -296,13 +305,8 @@ export const addManualMemoryRoute = async (req, res) => {
       })
       .returning();
 
-    // Index to Pinecone (fire-and-forget)
     try {
-      const embeddingResponse = await openai.embeddings.create({
-        model: 'text-embedding-3-small',
-        input: content.trim(),
-      });
-      const embedding = embeddingResponse.data[0].embedding;
+      const embedding = await embedText(content.trim(), embeddingsApiKey);
 
       await index.upsert([{
         id: newMemory.id,
@@ -314,7 +318,6 @@ export const addManualMemoryRoute = async (req, res) => {
       }]);
     } catch (error) {
       console.error('Error indexing memory to Pinecone:', error);
-      // Don't fail the request if Pinecone fails
     }
 
     return res.status(201).json(newMemory);
